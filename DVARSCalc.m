@@ -87,6 +87,8 @@ function [DVARS,Stat]=DVARSCalc(V0,varargin)
 %
 %   Please report bugs to srafyouni@gmail.com
 %
+
+%   
 %   USE THIS: x2=2500;df=2000;[(x2-df)/sqrt(2*df),-norminv(chi2cdf(x2,df,'upper'))]
 %   (x2-df)/sqrt(2*df) for larges
 %   'upper' < also do this. 
@@ -227,8 +229,10 @@ Zp      =   @(x,m,s) 1-normcdf(Zstat(x,m,s));
 %--
 X2stat  =   @(x,m,s) 2*m/s^2*x;
 X2df    =   @(m,s)   2*m^2/s^2;
-X2p     =   @(x,m,s) 1-chi2cdf(X2stat(x,m,s),X2df(m,s));
+X2p     =   @(x,m,s) chi2cdf(X2stat(x,m,s),X2df(m,s),'upper');
+%X2p     =   @(x,m,s) 1-chi2cdf(X2stat(x,m,s),X2df(m,s));
 
+X2p0    =   @(x,m,s) (X2stat(x,m,s)-X2df(m,s))/sqrt(2*X2df(m,s));
 %Standardised DVARS--------------------------------------------------------
 DY    = diff(Y,1,2);
 DVARS = sqrt(sum(DY.^2)./I1);
@@ -279,7 +283,7 @@ switch testmeth
         Zval  = Zstat(DVARS2,M_DV2,S_DV2);
         Pval  = Zp(DVARS2,M_DV2,S_DV2);
         %Pval(Pval==0) = 10e-15; %There is no p-value=0!!
-        nu = []; c = [];
+        nu = []; c = []; NDVARS_X20=[];
         NDVARS_Z=Zval;
     case 'X2'
         M_DV2         = Mn(WhichExpVal);             
@@ -288,7 +292,9 @@ switch testmeth
         Zval          = Zstat(DVARS2,M_DV2,S_DV2);
         c             = X2stat(DVARS2,M_DV2,S_DV2);
         nu            = X2df(M_DV2,S_DV2);        
-        NDVARS_X2     = tinv(1-Pval,T0-1); 
+        %NDVARS_X2     = tinv(1-Pval,T0-1);
+        NDVARS_X2     =-norminv(Pval);
+        NDVARS_X20    =X2p0(DVARS2,M_DV2,S_DV2);
     otherwise
         error('Unknown testmeth!')
 end
@@ -300,6 +306,7 @@ if verbose
     disp('----Variances----------------------------------------')
     disp(array2table(Va,'VariableNames',VarNms));...
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%OLD CODE%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -373,6 +380,7 @@ Stat.pvals      = Pval;
 Stat.Zval       = Zval;
 Stat.NDVARS     = NDVARS;
 Stat.NDVARS_X2  = NDVARS_X2;
+Stat.NDVARS_X20 = NDVARS_X20;
 Stat.NDVARS_Z   = NDVARS_Z;
 Stat.Mu0        = mean(IQRsd(Y));
 Stat.Y_MS       = mean(mean(Y.^2)); 
@@ -442,6 +450,7 @@ else
     rmad = (madSp^2 - madSm^2)/(madSp^2 + madSm^2);
   end
 end
+
 
 function gsrY=fcn_GSR(Y)
 %Global Signal Regression
