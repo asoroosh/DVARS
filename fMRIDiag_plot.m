@@ -268,7 +268,6 @@ set(gcf,'Color','w');
 % close(f)
 % return
 %###################################################################################
-
 function T=PrettyTicks(Lim,varargin)
 % For a given axis limit, find pretty tick spacing; assumes 50 is always
 % in the plot (i.e. that rounded integers are always appropriate)
