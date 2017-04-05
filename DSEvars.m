@@ -75,7 +75,7 @@ function [V,Stat]=DSEvars(V0,varargin)
 %%%REFERENCES
 %
 %   Afyouni S. & Nichols T.E., Insights and inference for the fMRI 
-%   diagnostic measure DVARS, NeuroImage, 2017
+%   diagnostic measure DVARS, 2017
 %
 %
 %%%
@@ -86,9 +86,8 @@ function [V,Stat]=DSEvars(V0,varargin)
 %
 %   Please report bugs to srafyouni@gmail.com
 %
-%
-%
-%
+
+
 %% ParCheck
 t3_varn = {'Avar','Dvar','Svar','Evar'};
 t3_rown = {'Whole','Global','non-Global'};

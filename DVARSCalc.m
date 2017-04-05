@@ -88,11 +88,6 @@ function [DVARS,Stat]=DVARSCalc(V0,varargin)
 %   Please report bugs to srafyouni@gmail.com
 %
 
-%   
-%   USE THIS: x2=2500;df=2000;[(x2-df)/sqrt(2*df),-norminv(chi2cdf(x2,df,'upper'))]
-%   (x2-df)/sqrt(2*df) for larges
-%   'upper' < also do this. 
-
 %ParCheck------------------------------------------------------------------
 NDVARS_X2 = 'N/A'; NDVARS_Z = 'N/A'; NDVARS = 'N/A';
 
