@@ -350,7 +350,8 @@ Stat.RelVar     = RelVar;
 Stat.VT         = Var_Tab;
 Stat.dim        = [I1 T0];
 Stat.dim0       = [I0 T0];
-Stat.NDVAR_Mu0  = (V.Dvar_ts-median(V.Dvar_ts))/mean(V.Avar_ts)*100;
+Stat.DpDVARS    = (V.Dvar_ts-median(V.Dvar_ts))/mean(V.Avar_ts)*100;
+Stat.pDvar      = V.Dvar_ts./mean(V.Avar_ts)*100;
 
 Stat.GranMean_WholeBrain  = mean(mvY_WholeImage);
 Stat.GrandMean_Untouched  = mean(mvY_Untouched);
