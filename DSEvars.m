@@ -7,9 +7,6 @@ function [V,Stat]=DSEvars(V0,varargin)
 %            (I=Nx x Ny x Nz) and T is number of data-points
 % OPTIONS:
 %
-%   'verbose'     : Set to 1 if you need the log of runing code 
-%                   [default:1]
-%                   e.g.: [V,Stat]=DSEvars(V0,'verbose',1)
 %
 %   'DestDir'     : Output directory. Should only be used when the
 %                   input is a nifti image and user needs to save the
@@ -21,6 +18,10 @@ function [V,Stat]=DSEvars(V0,varargin)
 %
 %   'Scale'       : Scale the intensity between the data-sets.
 %                   e.g.: [V,Stat]=DSEvars(V0,'Scale',1/10)
+%
+%   'verbose'     : Set to 1 if you need the log of runing code 
+%                   [default:1]
+%                   e.g.: [V,Stat]=DSEvars(V0,'verbose',1)
 %
 %%%OUTPUTS:
 %
@@ -74,8 +75,7 @@ function [V,Stat]=DSEvars(V0,varargin)
 %
 %%%REFERENCES
 %
-%   Afyouni S. & Nichols T.E., Insights and inference for the fMRI 
-%   diagnostic measure DVARS, 2017
+%   Afyouni S. & Nichols T.E., Insights and inference for DVARS, 2017
 %
 %
 %%%
@@ -116,6 +116,14 @@ if sum(strcmpi(varargin,'scale'))
    md           =   1;
 end
 
+%temp
+% if sum(strcmpi(varargin,'MeanImage'))
+%    mYr    =   varargin{find(strcmpi(varargin,'MeanImage'))+1};
+%    mYr=mYr(mYr~=0 & ~isnan(mYr));
+%    %size(mYr)
+%    md           =   mean(mYr);
+% end
+
 if ischar(V0)
     [ffpathstr,ffname,ffext]=fileparts(V0);
     if verbose; disp(['-Path to the image is: ' ffpathstr]); end;
@@ -132,7 +140,7 @@ if ischar(V0)
         V2 = V1.img; 
         X0 = size(V2,1); Y0 = size(V2,2); Z0 = size(V2,3); T0 = size(V2,4);
         I0 = prod([X0,Y0,Z0]);
-        Y  = reshape(V2,[I0,T0]); clear V2 V1;
+        Y  = reshape(V2,[I0,T0]); clear V2;
     else
         error('Unknown input image.')
     end
@@ -163,7 +171,7 @@ mvY_Untouched = mean(Y,2);
 % Intensity Normalisation------------------------------------------------------
 IntnstyScl = @(Y,md,scl) (Y./md).*scl; 
 if ~isempty(scl) && isempty(md)
-    md  = mean(mean(Y));
+    md  = median(mean(Y,2)); %NB median of the mean image.
     Y   = IntnstyScl(Y,md,scl);
     if verbose; disp(['-Intensity Normalised by ' num2str(scl) '&' num2str(md) '.']); end;
 elseif ~isempty(scl) && ~isempty(md)
@@ -245,7 +253,7 @@ if ~isempty(DestDir) && ischar(V0)
         Var1_tmp      = zeros(I0,size(Var0_tmp,2));
         Var1_tmp(idx) = Var0_tmp;
         Y_tmp         = reshape(Var1_tmp,[X0 Y0 Z0]);
-        nii_tmp       = make_nii(Y_tmp,[2,2,2],[0,0,0],64,['3D image of ' is{1}]);
+        nii_tmp       = make_nii(sum(Y_tmp,4),[2,2,2],[0,0,0],64,['3D image of ' is{1}]);
         save_nii(nii_tmp,[savedir is{1} '.nii.gz'])
         if verbose; disp([is{1} ' saved: ' savedir is{1} '.nii.gz']); end;
         clear *_tmp
