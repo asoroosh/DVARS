@@ -11,7 +11,7 @@ function [DVARS,Stat]=DVARSCalc(V0,varargin)
 %
 %   Following parameters are optional:
 %
-%   'TestMeth':     Should be followed by 'Z' for Z-test and 'X2' for 
+%   'TestMethod':    Should be followed by 'Z' for Z-test and 'X2' for 
 %                   Chi^2 test [default:'Z'].
 %                   e.g. [DVARS,Stat]=DVARSCalc(V0,'TestMeth','X2')
 %
@@ -29,7 +29,7 @@ function [DVARS,Stat]=DVARSCalc(V0,varargin)
 %                   e.g. [DVARS,Stat]=DVARSCalc(V0,'WhichExpVal',3)
 %
 %   'TransPower':   Power of transformation [default:1/3]
-%                   e.g. [DVARS,Stat]=DVARSCalc(V0,'TestMeth','X2','TransPower',1/3)
+%                   e.g. [DVARS,Stat]=DVARSCalc(V0,'TestMethod','X2','TransPower',1/3)
 %
 %   'nflag':        Set to 1 if you need standardised DVARS [default:0]. NB! 
 %                   the normalised DVARS is not required for the inference.
@@ -89,7 +89,7 @@ function [DVARS,Stat]=DVARSCalc(V0,varargin)
 %
 
 %ParCheck------------------------------------------------------------------
-NDVARS_X2 = 'N/A'; NDVARS_Z = 'N/A'; NDVARS = 'N/A';
+NDVARS_X2 = 'N/A'; NDVARS_Z = 'N/A'; RelDVARS = 'N/A';
 
 testmeth    = 'Z';  nflag       = 0;
 dd          = 1;    verbose     = 1;
@@ -106,8 +106,8 @@ end
 if sum(strcmpi(varargin,'verbose'))
    verbose      =   varargin{find(strcmpi(varargin,'verbose'))+1};
 end
-if sum(strcmpi(varargin,'testmeth'))
-   testmeth     =   varargin{find(strcmpi(varargin,'testmeth'))+1};
+if sum(strcmpi(varargin,'TestMethod'))
+   testmeth     =   varargin{find(strcmpi(varargin,'TestMethod'))+1};
    if strcmpi(testmeth,'Z')
        WhichExpVal = 3;
    end
@@ -228,7 +228,7 @@ X2p     =   @(x,m,s) chi2cdf(X2stat(x,m,s),X2df(m,s),'upper');
 %X2p     =   @(x,m,s) 1-chi2cdf(X2stat(x,m,s),X2df(m,s));
 
 X2p0    =   @(x,m,s) (X2stat(x,m,s)-X2df(m,s))/sqrt(2*X2df(m,s));
-%Standardised DVARS--------------------------------------------------------
+%Relative DVARS--------------------------------------------------------
 DY    = diff(Y,1,2);
 DVARS = sqrt(sum(DY.^2)./I1);
 if nflag
@@ -247,7 +247,7 @@ if nflag
         if verbose; disp(['--AC robust estimate was failed on ' num2str(sum(ACf_idx)) ' voxels.']); end; 
     end
     
-    NDVARS     =  DVARS./(sqrt((sum(2*(1-AC).*(Rob_S.^2)))./I1));
+    RelDVARS     =  DVARS./(sqrt((sum(2*(1-AC).*(Rob_S.^2)))./I1));
 end
 %Inference-----------------------------------------------------------------
 DVARS2  = mean(DY.^2);
@@ -286,12 +286,16 @@ switch testmeth
         Pval          = X2p(DVARS2,M_DV2,S_DV2);
         Zval          = Zstat(DVARS2,M_DV2,S_DV2);
         c             = X2stat(DVARS2,M_DV2,S_DV2);
-        nu            = X2df(M_DV2,S_DV2);        
-        %NDVARS_X2     = tinv(1-Pval,T0-1);
-        NDVARS_X2     =-norminv(Pval);
-        NDVARS_X20    =X2p0(DVARS2,M_DV2,S_DV2);
+        nu            = X2df(M_DV2,S_DV2);          %Spatial EDF 
+        NDVARS_X2     = -norminv(Pval);
+        NDVARS_X20    = X2p0(DVARS2,M_DV2,S_DV2);
+        
+        %only substitute the infs, the rest is better done in matlab.
+        NDVARS_X2(isinf(NDVARS_X2)) = NDVARS_X20(isinf(NDVARS_X2));
+        
+        
     otherwise
-        error('Unknown testmeth!')
+        error('Unknown test method!')
 end
 
 if verbose
@@ -301,7 +305,6 @@ if verbose
     disp('----Variances----------------------------------------')
     disp(array2table(Va,'VariableNames',VarNms));...
 end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%OLD CODE%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -367,16 +370,19 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Stat.DVARS2     = DVARS2;
+%Test stats
 Stat.E          = Mn;
 Stat.S          = sqrt(Va);
 Stat.nu         = nu;
 Stat.c          = c;
 Stat.pvals      = Pval;
 Stat.Zval       = Zval;
-Stat.NDVARS     = NDVARS;
-Stat.NDVARS_X2  = NDVARS_X2;
-Stat.NDVARS_X20 = NDVARS_X20;
-Stat.NDVARS_Z   = NDVARS_Z;
+%Standardised 
+Stat.RDVARS     = RelDVARS;
+Stat.SDVARS_X2  = NDVARS_X2;  %this dude is suggested to be used!
+Stat.SDVARS_X20 = NDVARS_X20;
+Stat.SDVARS_Z   = NDVARS_Z;
+%General info
 Stat.Mu0        = mean(IQRsd(Y));
 Stat.Y_MS       = mean(mean(Y.^2)); 
 Stat.dim        = [I1 T0];
@@ -385,6 +391,7 @@ Stat.RobAC_Fail = find(ACf_idx);
 Stat.GrandMean  = mean(mvY);
 Stat.GrandMean0 = mean(mvY0);
 %Stat.NDVARS_Mu0 = (DVARS-Stat.Mu0)/sqrt(Stat.Y_MS)*100; 
+
 
 Stat.Config.TestMeth    =   testmeth;
 Stat.Config.PowerTrans  =   dd;

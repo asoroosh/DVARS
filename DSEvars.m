@@ -192,8 +192,6 @@ Y       =    Y-dmeaner; clear dmeaner
 mvY_Demeaned = mean(Y,2);  
 if verbose; disp(['-Data centred. Untouched Grand Mean: ' num2str(mean(mvY_Untouched)) ', Post-norm Grand Mean: ' num2str(mean(mvY_NormInt)) ', Post demean: ' num2str(mean(mvY_Demeaned))]); end;
 %Data GSRed--------------------------------ONLY FOR TEST-----------------
-%fcn_GSR = @(Y) (Y'-(mean(Y',2)*(pinv(mean(Y',2))*Y')))';
-%gsrflag=1;
 if gsrflag 
     Y  =    fcn_GSR(Y);
     if verbose; disp('-Data GSRed.'); end;
@@ -340,7 +338,8 @@ if verbose
     disp(array2table([MS',RMS',Prntg',RelVar'],'VariableNames',Col_labs,'RowNames',Row_labs))
     disp('----------------------')
 end    
-%% return
+
+%DSE ANOVE table
 Stat.Labels     = Row_labs;
 Stat.SS         = SS;
 Stat.MS         = MS;
@@ -348,11 +347,13 @@ Stat.RMS        = RMS;
 Stat.Prntg      = Prntg;
 Stat.RelVar     = RelVar;
 Stat.VT         = Var_Tab;
+%Config
 Stat.dim        = [I1 T0];
 Stat.dim0       = [I0 T0];
-Stat.DpDVARS    = (V.Dvar_ts-median(V.Dvar_ts))/mean(V.Avar_ts)*100;
+%Standardised DVARS
+Stat.DpDVARS    = (V.Dvar_ts-median(V.Dvar_ts))/mean(V.Avar_ts)*100; 
 Stat.pDvar      = V.Dvar_ts./mean(V.Avar_ts)*100;
-
+%Mean -- sanity checks
 Stat.GranMean_WholeBrain  = mean(mvY_WholeImage);
 Stat.GrandMean_Untouched  = mean(mvY_Untouched);
 Stat.GrandMean_NormInt    = mean(mvY_NormInt);
@@ -361,6 +362,7 @@ function gsrY=fcn_GSR(Y)
 %Global Signal Regression
 %Inspired from FSLnets
 %For the fMRIDiag, it needs to be transposed. 
+% SA, UoW, 2017
 
 Y=Y';
 mgrot=mean(Y,2); 
