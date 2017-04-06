@@ -68,6 +68,9 @@ function [V,Stat]=DSEvars(V0,varargin)
 %   
 %   OneSub='~/100307/rfMRI_REST1_LR.nii.gz' %a HCP Subject
 %   [V,Stat]=DSEvars(OneSub,'verbose',1,'DestDir','~/temp','Norm',100);
+%
+%   Stat.DpDVARS  : \Delta\%D-var (Exceed fast Standardised DVARS) 
+%   Stat.pDvar    : \%D-var       () 
 %   In this example, the function returns the variance components and print
 %   the SS and ANOVA tables for input of nifti image. It also saves the 4D 
 %   and 3D images of variance components in directory '~/temp'.     
@@ -76,6 +79,7 @@ function [V,Stat]=DSEvars(V0,varargin)
 %%%REFERENCES
 %
 %   Afyouni S. & Nichols T.E., Insights and inference for DVARS, 2017
+%   http://www.biorxiv.org/content/early/2017/04/06/125021
 %
 %
 %%%

@@ -11,29 +11,30 @@ function [DVARS,Stat]=DVARSCalc(V0,varargin)
 %
 %   Following parameters are optional:
 %
-%   'TestMethod':    Should be followed by 'Z' for Z-test and 'X2' for 
+%   'TestMethod':   Should be followed by 'Z' for Z-test and 'X2' for 
 %                   Chi^2 test [default:'Z'].
-%                   e.g. [DVARS,Stat]=DVARSCalc(V0,'TestMeth','X2')
+%                   e.g. [DVARS,Stat]=DVARSCalc(V0,'TestMethod','X2')
 %
-%   'VarRobIQR':    Method for robust estimate of variance. It can be either 
+%   'VarType':      Method for robust estimate of variance. It can be either 
 %                   'IQR' for full IQR or 'hIQR' for half-IQR. 
 %                   [default:'hIQR']
-%                   e.g. [DVARS,Stat]=DVARSCalc(V0,'VarRobIQR','IQR')
+%                   e.g. [DVARS,Stat]=DVARSCalc(V0,'VarType','IQR')
 %
-%   'WhichExpVal':  Method for robust estimate of expected value. The value
+%   'MeanType':     Method for robust estimate of expected value. The value
 %                   should be a digit corresponding to the order of 
 %                   following methods [default:'median']: 
 %                   'sig2bar','sig2median','median','sigbar2','xbar'.
-%                   For example: WhichExpVal=3 means the method to estimate
+%                   For example: MeanType=3 means the method to estimate
 %                   robust expected value is empirical median. 
-%                   e.g. [DVARS,Stat]=DVARSCalc(V0,'WhichExpVal',3)
+%                   e.g. [DVARS,Stat]=DVARSCalc(V0,'MeanType',3)
 %
 %   'TransPower':   Power of transformation [default:1/3]
 %                   e.g. [DVARS,Stat]=DVARSCalc(V0,'TestMethod','X2','TransPower',1/3)
 %
-%   'nflag':        Set to 1 if you need standardised DVARS [default:0]. NB! 
-%                   the normalised DVARS is not required for the inference.
-%                   e.g. [DVARS,Stat]=DVARSCalc(V0,'nflag',1)
+%   'RDVARS':       By passing this arg, the function generates the
+%                   relative DVARS (RDVARS). NB! this might take a while
+%                   due to robust estimate of autocorrelation. 
+%                   e.g. [DVARS,Stat]=DVARSCalc(V0,'RDVARS')
 %
 %   'verbose':      Set to 1 if you need the log of runing code [default:1]
 %                   e.g. [DVARS,Stat]=DVARSCalc(V0,'verbose',1)
@@ -63,7 +64,7 @@ function [DVARS,Stat]=DVARSCalc(V0,varargin)
 %   For iid case:
 %
 %   I=4e4; T=1200; Y=randn(I,T);
-%   [DVARS,Stat]=DVARSCalc(Y,'VarRobIQR','hIQR','TestMeth','X2','TransPower',1/3);
+%   [DVARS,Stat]=DVARSCalc(Y,'VarType','hIQR','TestMethod','X2','TransPower',1/3);
 %   find(Stat.pvals<0.05./(T-1)) %print corrupted DVARS data-points
 %
 %   For the case with simulated ouliers:
@@ -72,13 +73,13 @@ function [DVARS,Stat]=DVARSCalc(V0,varargin)
 %   Y=randn(I,T);
 %   Idx_OL=randi(T);
 %   Y(:,Idx_OL)=Y(:,Idx_OL)+1;
-%   [DVARS,Stat]=DVARSCalc(Y,'VarRobIQR','hIQR','TestMeth','X2','TransPower',1/3);
+%   [DVARS,Stat]=DVARSCalc(Y,'VarType','hIQR','TestMethod','X2','TransPower',1/3);
 %   find(Stat.pvals<0.05./(T-1)) %print corrupted DVARS data-points
 %
 %%%%REFERENCES
 %
-%   Afyouni S. & Nichols T.E., Insights and inference for the fMRI 
-%   diagnostic measure DVARS, 2017
+%   Afyouni S. & Nichols T.E., Insights and inference for DVARS, 2017
+%   http://www.biorxiv.org/content/early/2017/04/06/125021
 %
 %   Soroosh Afyouni & Thomas Nichols, UoW, Feb 2017
 % 
