@@ -19,7 +19,7 @@ The toolbox can be used to:
 * `FSL 5.0.9` (or newer) to produce DSE variance images [optional].
 
 ## DVARS Inference
-Using `DVARSCalc.m` allows you to estimate the DVARS related statistics (e.g. D-var, p-values for spikes and standardised variants of the fast variance).
+Using `DVARSCalc.m` allows you to estimate the DVARS-related statistics (e.g. D-var, p-values for spikes and standardised variants of the fast variance).
 
 As a quick example, for a pure white noise with *I=1000* observations (voxels) and *T=100* data-points, we have:
 ```
@@ -106,10 +106,10 @@ Y(:,Idx_OL)=Y(:,Idx_OL)+1;
 find(Stat.pvals<0.05./(T-1)) %using Bonferroni correction for Multiple Comparison Error
 ans =
    462   463
-Stat.RDVARS(460:465)
+Stat.RDVARS(460:465) %Relative DVARS (Nichols, 2013)
 ans =
   0.9965    0.9983    1.7247    1.7310    1.0032    1.0031
-Stat.SDVARS_X2(460:465)
+Stat.SDVARS_X2(460:465) %Z(D-var)
 ans =
      -1.2125   -0.6855  285.8207  289.0012    0.7476    0.7119
 
@@ -122,7 +122,45 @@ Input_Path='~/path/to/your/image.nii.gz';
 ```
 
 ## DSE Variance Decomposition
-Under Construction...
+Using `DSEvars.m` allows the DSE (fast, slow and edge) variance decomposition.
+
+```
+I=4e4; T=1200;
+Y=randn(I,T);
+[V,Stat]=DSEvars(Y);
+```
+
+```
+-Input is a Matrix.
+-Extra-cranial areas removed: 40000x1200
+-No normalisation/scaling has been set!
+-Data centred. Untouched Grand Mean: -6.3211e-05, Post-norm Grand Mean: -6.3211e-05, Post demean: -5.7165e-20
+-Variance images will NOT be saved:
+-- Either destination directory was not set OR the input is not a nifti.
+----------------------
+Sum-of-Mean-Squared (SMS) Table
+                  Avar    Dvar    Svar    Evar
+                  ____    ____    ____    ____
+
+    Whole         1198    599     598     1   
+    Global           0      0       0     0   
+    non-Global    1198    599     598     1   
+
+------------ANOVA table:
+                  MS           RMS        Percentage_of_whole    Relative_to_iid
+              __________    __________    ___________________    _______________
+
+    Avar         0.99897       0.99949           100                   1        
+    Dvar         0.49957        0.7068        50.009               1.001        
+    Svar         0.49857       0.70609        49.908             0.99899        
+    Evar      0.00083476      0.028892      0.083562              1.0027        
+    g_Avar    2.4021e-05     0.0049011     0.0024046             0.96184        
+    g_Dvar    1.1663e-05     0.0034151     0.0011675             0.93478        
+    g_Svar     1.234e-05     0.0035129     0.0012353             0.98907        
+    g_Evar    1.7706e-08    0.00013306    1.7724e-06             0.85076        
+
+----------------------
+```
 
 ## Visualisation
 Under Construction...
