@@ -16,7 +16,7 @@ The toolbox can be used to:
 ## Dependencies
 * MATLAB2016b (or higher) statistical toolbox [required].
 * `'/Nifti_Util'` for neuroimaging analysis [optional].
-* `FSL 5.0.9` (or newer) to produce DSE variance images [optional].
+* `FSL 5.0.9` (or later) to produce DSE variance images [optional].
 
 ## DVARS Inference
 Using `DVARSCalc.m` allows you to estimate the DVARS-related statistics (e.g. D-var, p-values for spikes and standardised variants of the fast variance).
