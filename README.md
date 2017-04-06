@@ -1,7 +1,8 @@
 # Introduction
-Series of codes (mainly in MATLAB and Shell scripts), available here, support methods proposed in
+Series of codes (mainly in MATLAB and Shell scripts), available here, to support DVARS inference and DSE variance decomposition proposed in
 
  __Afyouni S. & Nichols T.E, *insight and inference for DVARS*, 2017__
+http://www.biorxiv.org/content/early/2017/04/06/125021
 
 The toolbox can be used to:
 
@@ -39,7 +40,7 @@ Y = randn(1000,100);
 
 Settings: TestMethod=Z  I=1000  T=100
 ----Expected Values----------------------------------
-    sig2bar    sig2median    median    sigbar2     xbar 
+    sig2bar    sig2median    median    sigbar2     xbar
     _______    __________    ______    _______    ______
 
     2.0342     1.984         1.9898    2.004      1.9998
