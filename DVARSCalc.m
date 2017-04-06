@@ -115,14 +115,15 @@ end
 if sum(strcmpi(varargin,'transpower'))
    dd           =   varargin{find(strcmpi(varargin,'transpower'))+1};
 end
-if sum(strcmpi(varargin,'nflag'))
-   nflag        =   varargin{find(strcmpi(varargin,'nflag'))+1};
+if sum(strcmpi(varargin,'RDVARS'))
+   %nflag        =   varargin{find(strcmpi(varargin,'RDVARS'))+1};
+   nflag        =   1;
 end
-if sum(strcmpi(varargin,'whichexpval'))
-   WhichExpVal  =   varargin{find(strcmpi(varargin,'whichexpval'))+1};
+if sum(strcmpi(varargin,'MeanType'))
+   WhichExpVal  =   varargin{find(strcmpi(varargin,'MeanType'))+1};
 end
-if sum(strcmpi(varargin,'varrobiqr'))
-   switch varargin{find(strcmpi(varargin,'varrobiqr'))+1}
+if sum(strcmpi(varargin,'VarType'))
+   switch varargin{find(strcmpi(varargin,'VarType'))+1}
     case 'IQR'
         WhichVar = 2;
     case 'hIQR'
@@ -236,7 +237,7 @@ if nflag
     Rob_S = IQRsd(Y');
     AC    = zeros(1,I1);
     for iv=1:I1
-        if (~mod(iv,10e3) && verbose); disp(['--Est Rob AC on voxel: ' num2str(iv)]); end;
+        if (~mod(iv,10e2) && verbose); disp(['--voxel: ' num2str(iv)]); end;
         AC(iv) = madicc(Y(iv,1:end-1),Y(iv,2:end));
     end
     
