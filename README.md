@@ -1,5 +1,5 @@
 # Introduction
-Series of codes (mainly in MATLAB and Shell scripts), available here, to support DVARS inference and DSE variance decomposition proposed in
+Series of scripts, mainly in MATLAB and BASH, to support DVARS inference and DSE variance decomposition proposed in
 
  __Afyouni S. & Nichols T.E, *insight and inference for DVARS*, 2017__
 http://www.biorxiv.org/content/early/2017/04/06/125021
