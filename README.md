@@ -163,4 +163,13 @@ Sum-of-Mean-Squared (SMS) Table
 ```
 
 ## Visualisation
-Under Construction...
+We suggest to visualise the DSE variance components and significant DVARS data-points
+as proposed in paper (see Fig. 3, Fig. 4 and Fig. 5). This can easily done as below:
+
+```
+Input_Path='~/path/to/your/image.nii.gz';
+[V,Stat] = DSEvars('Input_Path')
+
+f_hndl=figure('position',[50,500,600,500]); hold on;
+fMRIDiag_plot(V,'handle',f_hndl)
+```
