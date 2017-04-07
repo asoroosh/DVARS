@@ -1,7 +1,7 @@
 # Introduction
 Series of scripts, mainly in MATLAB and BASH, to support DVARS inference and DSE variance decomposition proposed in
 
- __Afyouni S. & Nichols T.E, *insight and inference for DVARS*, 2017__
+ __Afyouni S. & Nichols T.E, *Insight and Inference for DVARS*, 2017__
 http://www.biorxiv.org/content/early/2017/04/06/125021
 
 The toolbox can be used to:
