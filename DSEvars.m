@@ -130,12 +130,12 @@ if sum(strcmpi(varargin,'scale'))
 end
 
 %temp
-% if sum(strcmpi(varargin,'MeanImage'))
-%    mYr    =   varargin{find(strcmpi(varargin,'MeanImage'))+1};
-%    mYr=mYr(mYr~=0 & ~isnan(mYr));
-%    %size(mYr)
-%    md           =   mean(mYr);
-% end
+if sum(strcmpi(varargin,'MeanImage'))
+   mYr    =   varargin{find(strcmpi(varargin,'MeanImage'))+1};
+   mYr=mYr(mYr~=0 & ~isnan(mYr));
+   %size(mYr)
+   md           =   median(mYr);
+end
 
 if ischar(V0)
     [ffpathstr,ffname,ffext]=fileparts(V0);
