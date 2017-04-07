@@ -1,10 +1,11 @@
 function [V,Stat]=DSEvars(V0,varargin)
-%[V,Stat]=DSEvars(V0,verbose,varargin)
+%[V,Stat]=DSEvars(V0,varargin)
 %
 %%%INPUTS:
-%   V0:      Can be both (1) a string indicating the path to the nifti file
-%            OR a numerical matrix of size IxT. Where I is number of voxels 
-%            (I=Nx x Ny x Nz) and T is number of data-points
+%   V0:             Can be (1) a string indicating the path to the 
+%                   nifti/cifti file (2) a numerical matrix of size IxT. 
+%                   Where I is number of voxels (I=Nx x Ny x Nz) and T is 
+%                   number of data-points.
 % OPTIONS:
 %
 %
@@ -44,13 +45,21 @@ function [V,Stat]=DSEvars(V0,varargin)
 %   inclusding the extra-cranial may inflate the variance. You can use
 %   'bet' in FSL package to remove the extra-cranial areas. The scripts
 %   automatically remove the zero/NaN voxels.
+%
 %   2) If a destination directory doesn't exist, the function automatically
 %   make a directory with the given 'DestDir'.
+%
 %   3) To fully exploit the DSEvars, the data should *NOT* be undergone any
 %   form of temporal filtering, as temporal filtering may remove the high
 %   freq fluctuations.
+%
 %   4) For inter-site/cohort comparison, it is recommended that the
 %   intensity is scale accordingly by option 'Norm' or 'Scale'.
+%
+%   5) If the input is set to be a CIFTI file, you require Nifti_Util 
+%      (provided in the directory). For input of CIFTI you require to
+%      addpath the FieldTrip toolbox from: 
+%      http://www.fieldtriptoolbox.org/reference/ft_read_cifti 
 %
 %%%EXAMPLE:
 %
@@ -70,7 +79,7 @@ function [V,Stat]=DSEvars(V0,varargin)
 %   [V,Stat]=DSEvars(OneSub,'verbose',1,'DestDir','~/temp','Norm',100);
 %
 %   Stat.DpDVARS  : \Delta\%D-var (Exceed fast Standardised DVARS) 
-%   Stat.pDvar    : \%D-var       () 
+%   Stat.pDvar    : \%D-var       (Percentage of the whole var -A-var-) 
 %   In this example, the function returns the variance components and print
 %   the SS and ANOVA tables for input of nifti image. It also saves the 4D 
 %   and 3D images of variance components in directory '~/temp'.     
@@ -185,7 +194,7 @@ elseif ~isempty(scl) && ~isempty(md)
 elseif isempty(scl) && isempty(md)    
     disp('-No normalisation/scaling has been set!')
 else
-    error('Something is wrong with param re intensity normalisation')
+    error('Something is wrong with param re: intensity normalisation')
 end
 
 %Centre the data-----------------------------
@@ -355,13 +364,13 @@ Stat.VT         = Var_Tab;
 Stat.dim        = [I1 T0];
 Stat.dim0       = [I0 T0];
 %Standardised DVARS
-Stat.DpDVARS    = (V.Dvar_ts-median(V.Dvar_ts))/mean(V.Avar_ts)*100; 
-Stat.pDvar      = V.Dvar_ts./mean(V.Avar_ts)*100;
+Stat.DpDVARS    = (V.Dvar_ts-median(V.Dvar_ts))/mean(V.Avar_ts)*100; %< This is \Delta\%D-var
+Stat.pDvar      = V.Dvar_ts./mean(V.Avar_ts)*100; %< & this is \%D-var
 %Mean -- sanity checks
 Stat.GranMean_WholeBrain  = mean(mvY_WholeImage);
 Stat.GrandMean_Untouched  = mean(mvY_Untouched);
 Stat.GrandMean_NormInt    = mean(mvY_NormInt);
-Stat.GrandMean_Demeaned   = mean(mvY_Demeaned);
+Stat.GrandMean_Demeaned   = mean(mvY_Demeaned); 
 function gsrY=fcn_GSR(Y)
 %Global Signal Regression
 %Inspired from FSLnets
