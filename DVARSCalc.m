@@ -1,18 +1,18 @@
 function [DVARS,Stat]=DVARSCalc(V0,varargin)
-%[DVARS,Stat]=DVARSCalc(V0)
+%[DVARS,Stat]=DVARSCalc(V0,varargin)
 % Statistical inference on DVars component to identify corrupted scans. 
 %
 %%%%INPUTS:
 %
-%   V0:             Can be both (1) a string indicating the path to the 
-%                   nifti file OR a numerical matrix of size IxT. Where I 
-%                   is number of voxels (I=Nx x Ny x Nz) and T is number of
-%                   data-points.
+%   V0:             Can be (1) a string indicating the path to the 
+%                   nifti/cifti file (2) a numerical matrix of size IxT. 
+%                   Where I is number of voxels (I=Nx x Ny x Nz) and T is 
+%                   number of data-points.
 %
 %   Following parameters are optional:
 %
 %   'TestMethod':   Should be followed by 'Z' for Z-test and 'X2' for 
-%                   Chi^2 test [default:'Z'].
+%                   Chi^2 test [default:'X2'].
 %                   e.g. [DVARS,Stat]=DVARSCalc(V0,'TestMethod','X2')
 %
 %   'VarType':      Method for robust estimate of variance. It can be either 
@@ -56,6 +56,11 @@ function [DVARS,Stat]=DVARSCalc(V0,varargin)
 %   inclusding the extra-cranial may inflate the variance. You can use
 %   'bet' in FSL package to remove the extra-cranial areas. The scripts
 %   automatically remove the zero/NaN voxels.
+%
+%   2) If the input is set to be a CIFTI file, you require Nifti_Util 
+%      (provided in the directory). For input of CIFTI you require to
+%      addpath the FieldTrip toolbox from: 
+%      http://www.fieldtriptoolbox.org/reference/ft_read_cifti
 %   
 %
 %
@@ -92,7 +97,7 @@ function [DVARS,Stat]=DVARSCalc(V0,varargin)
 %ParCheck------------------------------------------------------------------
 NDVARS_X2 = 'N/A'; NDVARS_Z = 'N/A'; RelDVARS = 'N/A';
 
-testmeth    = 'Z';  nflag       = 0;
+testmeth    = 'X2';  nflag       = 0;
 dd          = 1;    verbose     = 1;
 WhichExpVal = 3;    WhichVar    = 3;
 ACf_idx     = [];   gsrflag     = 0; 
@@ -130,7 +135,7 @@ if sum(strcmpi(varargin,'VarType'))
     case 'hIQR'
         WhichVar = 3;
     otherwise
-        error('Unknown VarRobIQR! Choose between IQR and hIQR! NB case sensitive')
+        error('Unknown VarType! Choose either IQR and hIQR')
     end
 end
 if sum(strcmpi(varargin,'norm'))
