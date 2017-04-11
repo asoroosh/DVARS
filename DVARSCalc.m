@@ -269,7 +269,7 @@ Z   = DVARS2.^dd;
 M_Z = median(Z);
 
 VarNms = {'S2' , 'IQRd' , 'hIQRd'};
-Va     = [round(var(DVARS2),2) , (1/dd*M_Z^(1/dd-1)*IQRsd(Z))^2 , (1/dd*M_Z^(1/dd-1)*H_IQRsd(Z))^2];
+Va     = [var(DVARS2) , (1/dd*M_Z^(1/dd-1)*IQRsd(Z))^2 , (1/dd*M_Z^(1/dd-1)*H_IQRsd(Z))^2];
 
 if verbose
     disp('-Settings: ')
