@@ -1,19 +1,99 @@
 function fMRIDiag_plot(V,varargin)
 % fMRIDiag_plot(V,varargin)
-%
 % Draws main var components (+ non-global comps) with BOLD intensity for
 % further diagnosis. 
 %
+%%%%INPUTS
+%   V :  is a structure which contains the variance components. For more
+%       information regarding how to estimate the V, please see DSEvars.m
 %
-%   SA, 2017, UoW
-%   srafyouni@gmail.com
+%   The following arguments are optional:
 %
+%   'FD'        : The frame-wise deplacement. FD can be calculated by FDCalc.m
+%                 By triggering this option, a subplot is added at the top of the
+%                 figure. 
+%
+%   'AbsMov'    : Absolute movement parameters which helps to gain a better
+%                 insight regarding the FD components. It can be a matrix of 
+%                 2xT-1 where the rows indicated main movement components 
+%                 (rotation and trasnlational)
+%
+%   'Idx'       : The index of significant DVARS spikes which can be calculated
+%                 via DVARSCalc.m
+%
+%   'BOLD'      : Intensity BOLD image. If triggered, a subplot is added at the
+%                 bottom of the figure. 
+%
+%   'figure'    : handle for the figure. Default is a 1600x1400 figure window
+%
+%   'norm' & 'scale' : For intensity normalisation, similar to DVARSCalc.m
+%
+%   'ColRng'     : Colour range for BOLD intensity image. [Default is [-3 3] ]
+%
+%   'TickScaler' : If set to <1 then the number of ticks on the right y-axis 
+%                  DSEvars sub-figure will be less. If set to >1, then more 
+%                  ticks is shown [Default: 1]
+%
+%   'GrandMean'  : Grand Mean of the image. [Default: 100, as per Afyouni&Nichols 2017]
+%
+%   'verbose'    : Print the log? if yes, set to 1, if not set to 0. 
+%
+%   Line/figure Specs such as: 'linewidth' and 'fontsize' as in matlab. 
+%
+%   
+%%%%EXAMPLE
+%   
+% - %To produce the diagnostic figure for pure white noise, with two
+%   %subplots. 
+%   [V,Stat]=DSEvars(randn(10e4,100));
+%   fMRIDiag_plot(V)
+%   
+% - %To produce the diagnostic figure for HCP subject 100307 
+%   OneSub='~/100307/rfMRI_REST1_LR.nii.gz' %a HCP Subject
+%   [V,Stat]=DSEvars(OneSub);
+%   fMRIDiag_plot(V)
+%
+% - %To produce *full* diagnostic figure for HCP subject 100307 
+%   This example shows a full diagnostic procedure using DSE var
+%   decomposition and DVARS inference. 
+%
+%   OneSub='~/100307/rfMRI_REST1_LR.nii.gz' %a HCP Subject
+%   [V,V_Stat]=DSEvars(OneSub);
+%
+%   [DVARS,D_Stat]=DVARSCalc(OneSub);
+%   idx=find(D_Stat.pvals<0.05./(T-1)); %to find the significant spikes
+%
+%   MovPar=MovPartextImport(['~/100307/Movement_Regressors.txt']);        
+%   [FDts,FD_Stat]=FDCalc(MovPar);
+%
+%   V1 = load_untouch_nii(OneSub);
+%   V2 = V1.img; 
+%   X0 = size(V2,1); Y0 = size(V2,2); Z0 = size(V2,3); T0 = size(V2,4);
+%   I0 = prod([X0,Y0,Z0]);
+%   Y  = reshape(V2,[I0,T0]); clear V2 V1; 
+%
+%   f_hdl=figure('position',[50,500,600,600]);
+%   fMRIDiag_plot(V,'Idx',idx,'BOLD',Y,'FD',FDts,'AbsMov',[FD_Stat.AbsRot FD_Stat.AbsTrans],'figure',f_hdl)
+%   
+%
+%
+%%%%REFERENCES
+%
+%   Afyouni S. & Nichols T.E., Insights and inference for DVARS, 2017
+%   http://www.biorxiv.org/content/early/2017/04/06/125021.1
+%
+%   Soroosh Afyouni & Thomas Nichols, UoW, Feb 2017
+% 
+%   https://github.com/asoroosh/DVARS
+%   http://warwick.ac.uk/tenichols
+%
+%   Please report bugs to srafyouni@gmail.com
 %
 
 FDflag  = 0;  AbsMovflag = 0;  BOLDFlag  = 0;  Idx     = [];
 md      = []; scl        = []; verbose   = 1;  gsrflag = 0;
 nsp     = 14; lw         = 2;  lfs       = 12;
-TickScaler = 1; Thickness = 1; GrandMean = 100;
+TickScaler = 1;  GrandMean = 100;
 if sum(strcmpi(varargin,'gsrflag'))
    gsrflag      =   varargin{find(strcmpi(varargin,'gsrflag'))+1};
 end
@@ -39,8 +119,8 @@ if sum(strcmpi(varargin,'BOLD'))
    BOLDFlag = 1;
    nsp      = 20;
 end
-if sum(strcmpi(varargin,'handle'))
-    f_hdl          =   varargin{find(strcmpi(varargin,'handle'))+1};
+if sum(strcmpi(varargin,'figure'))
+    f_hdl          =   varargin{find(strcmpi(varargin,'figure'))+1};
 else
     f_hdl=figure('position',[50,500,1600,1400]); 
     hold on; box on; 
@@ -71,9 +151,7 @@ end
 if sum(strcmpi(varargin,'fontsize'))
    lfs     =   varargin{find(strcmpi(varargin,'fontsize'))+1};
 end
-if sum(strcmpi(varargin,'Thick'))
-   Thickness      =   varargin{find(strcmpi(varargin,'Thick'))+1};
-end
+
 %###################################################################################
 
 Col=get(groot,'defaultAxesColorOrder');
@@ -86,10 +164,17 @@ Ecol=Col(4,:); % Purple
 
 T=length(V.Avar_ts);
 Time=1:T;
-ds_bnd=1:T-1;
 
 hTime=(1:(T-1))+0.5;
 eTime=[1 T];
+
+if sum(strcmpi(varargin,'Thick'))
+   Thickness = varargin{find(strcmpi(varargin,'Thick'))+1};
+elseif T>500
+   Thickness = 1;
+else
+   Thickness = 0.5;   
+end
 
 %###################################################################################
 
@@ -231,15 +316,13 @@ if BOLDFlag
     dmeaner=    repmat(mvY,[1,T0]);
     Y      =    Y-dmeaner; clear dmeaner
     if verbose; disp('-Data centred.'); end;
-    %Data GSRed--------------------------------ONLY FOR TEST-----------------
-    %fcn_GSR = @(Y) (Y'-(mean(Y',2)*(pinv(mean(Y',2))*Y')))';
-    %gsrflag=1;
+    %--------------------------------ONLY FOR TEST-----------------
     if gsrflag 
         %gsrflag_lab={'GSR'};
         Y  =    fcn_GSR(Y);
         if verbose; disp('-Data GSRed.'); end;
     end
-    
+    %--------------------------------------------------------------
     
     sph3=subplot(nsp,1,[15 20]);
     hold on; box on;
@@ -376,9 +459,10 @@ for ii=1:numel(Idx)
 end
 return 
 %###################################################################################
+
 function gsrY=fcn_GSR(Y)
 %Global Signal Regression
-%Inspired from FSLnets
+%Inspired by FSLnets
 %For the fMRIDiag, it needs to be transposed. 
 %
 %   SA, 2017, UoW
