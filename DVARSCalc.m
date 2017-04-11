@@ -9,7 +9,7 @@ function [DVARS,Stat]=DVARSCalc(V0,varargin)
 %                   Where I is number of voxels (I=Nx x Ny x Nz) and T is 
 %                   number of data-points.
 %
-%   Following parameters are optional:
+%   Following arguments are optional:
 %
 %   'TestMethod':   Should be followed by 'Z' for Z-test and 'X2' for 
 %                   Chi^2 test [default:'X2'].
