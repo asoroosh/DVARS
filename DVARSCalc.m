@@ -84,7 +84,7 @@ function [DVARS,Stat]=DVARSCalc(V0,varargin)
 %%%%REFERENCES
 %
 %   Afyouni S. & Nichols T.E., Insights and inference for DVARS, 2017
-%   http://www.biorxiv.org/content/early/2017/04/06/125021
+%   http://www.biorxiv.org/content/early/2017/04/06/125021.1
 %
 %   Soroosh Afyouni & Thomas Nichols, UoW, Feb 2017
 % 
@@ -104,7 +104,10 @@ ACf_idx     = [];   gsrflag     = 0;
 md          = [];   scl         = [];
 
 % Add toolbox to open the images-------------------------------------------
-addpath Nifti_Util
+if isempty(strfind(path,'Nifti_Util'))
+    disp('-Nifti_Util added to the path.')
+    addpath(genpath('Nifti_Util'));
+end
 % Input Check--------------------------------------------------------------
 if sum(strcmpi(varargin,'gsrflag'))
    gsrflag      =   varargin{find(strcmpi(varargin,'gsrflag'))+1};
@@ -149,14 +152,13 @@ end
 if ischar(V0)
     [ffpathstr,ffname,ffext]=fileparts(V0);
     if verbose; disp(['-Path to the image is: ' ffpathstr]); end;
-    
-    if contains(ffname,'.dtseries') || contains(ffext,'.dtseries')
+    if ~isempty(strfind(ffname,'.dtseries')) || ~isempty(strfind(ffext,'.dtseries'))
         if verbose; disp(['--File is CIFTI: ' ffname ffext]); end;
         V1=ft_read_cifti(V0);
         V2=V1.dtseries;
         I0=size(V2,1); T0=size(V2,2);
         Y=V2; clear V2 V1; 
-    elseif ~contains(ffname,'.dtseries') || contains(ffname,'.nii') 
+    elseif isempty(strfind(ffname,'.dtseries')) || ~isempty(strfind(ffname,'.nii')) 
         if verbose; disp(['--File is NIFTI: ' ffname ffext]); end;
         V1 = load_untouch_nii(V0);
         V2 = V1.img; 
@@ -192,7 +194,7 @@ mvY0 = mean(Y,2); % untouched grand mean
 IntnstyScl = @(Y,md,scl) (Y./md).*scl; 
 
 if ~isempty(scl) && isempty(md)
-    md  = median(median(Y,2));
+    md  = median(mean(Y,2)); %NB median of the mean image
     Y   = IntnstyScl(Y,md,scl);
     if verbose; disp(['-Intensity Normalised by, scale: ' num2str(scl) ' & median: ' num2str(round(md,2)) '.']); end;
     
@@ -207,11 +209,10 @@ elseif isempty(scl) && isempty(md)
 else
     error('IntnstyScl :: Something is wrong with param re intensity normalisation')
 end
-
 %Centre the data-----------------------------------------------------------
-mvY    =    mean(Y,2);
-dmeaner=    repmat(mvY,[1,T0]);
-Y      =    Y-dmeaner; clear dmeaner
+mvY     =    mean(Y,2);
+dmeaner =    repmat(mvY,[1,T0]);
+Y       =    Y-dmeaner; clear dmeaner
 if verbose; disp(['-Data centred. Untouched Grand Mean: ' num2str(mean(mvY0)) ', Post-norm Grand Mean: ' num2str(mean(mvY))]); end;
 %Data GSRed--------------------------------ONLY FOR TEST-------------------
 %fcn_GSR = @(Y) Y'-(mean(Y,2)*(pinv(mean(Y,2))*Y'));
@@ -250,11 +251,11 @@ if nflag
     ACf_idx = isnan(AC);
     
     if any(ACf_idx)  
-        AC(ACf_idx)=[]; Rob_S(ACf_idx)=[]; 
+        AC(ACf_idx) = []; Rob_S(ACf_idx) = []; 
         if verbose; disp(['--AC robust estimate was failed on ' num2str(sum(ACf_idx)) ' voxels.']); end; 
     end
     
-    RelDVARS     =  DVARS./(sqrt((sum(2*(1-AC).*(Rob_S.^2)))./I1));
+    RelDVARS = DVARS./(sqrt((sum(2*(1-AC).*(Rob_S.^2)))./I1));
 end
 %Inference-----------------------------------------------------------------
 DVARS2  = mean(DY.^2);
@@ -312,6 +313,108 @@ if verbose
     disp('----Variances----------------------------------------')
     disp(array2table(Va,'VariableNames',VarNms));...
 end
+
+Stat.DVARS2     = DVARS2;
+
+%Test stats
+Stat.E          = Mn;
+Stat.S          = sqrt(Va);
+Stat.nu         = nu; %effective spatial degrees of freedom
+Stat.c          = c;
+Stat.pvals      = Pval;
+Stat.Zval       = Zval;
+
+Stat.Mu0        = mean(IQRsd(Y));
+Stat.Y_MS       = mean(mean(Y.^2)); % << This is A-var of DSEvar.m! 
+
+%Standardised 
+Stat.RDVARS     = RelDVARS;
+Stat.SDVARS_X2  = NDVARS_X2;
+%Stat.SDVARS_X20 = NDVARS_X20;
+Stat.SDVARS_Z   = NDVARS_Z;
+Stat.DeltapDvar = (DVARS2-median(DVARS2))./(4*Stat.Y_MS)*100;
+%A similar measure, as DeltapDvar is estimated via DSE variance in DSEvar.m as:
+%   Stat.DeltapDvar = (V.Dvar_ts-median(V.Dvar_ts))/mean(V.Avar_ts)*100;
+
+%General info
+Stat.dim        = [I1 T0];
+Stat.dim0       = [I0 T0];
+Stat.RobAC_Fail = find(ACf_idx);
+Stat.GrandMean  = mean(mvY);
+Stat.GrandMean0 = mean(mvY0);
+
+%Config
+Stat.Config.TestMeth    =   testmeth;
+Stat.Config.PowerTrans  =   dd;
+Stat.Config.WhichExpVal =   MeanNms{WhichExpVal};
+Stat.Config.WhichVar    =   VarNms{WhichVar};
+Stat.Config.gsrflag     =   gsrflag;
+Stat.Config.Median2Norm =   md;
+Stat.Config.Scale2Norm  =   scl;
+
+function rmad = madicc(x,y)
+% Median Absolute Deviation Intraclass Correlation Coefficient
+%
+% Impliments Median Absolute Deviation Correlation Coefficient, (as
+% described in Shevlyakov & Smirnov (2011)), modified to be the
+% intraclass version of correlation.  The (non-intrasclass) 
+% estimate is
+%     r = ( mad(Sp)^2 - mad(Sm)^2 ) / ( mad(Sp)^2 + mad(Sm)^2 )
+% where
+%     Sp = (x-m(x))/mad(x) + (y-m(y))/mad(y);
+%     Sm = (x-m(x))/mad(x) - (y-m(y))/mad(y);
+% and m() is median and mad() is the median absolute deviation,
+%     mad(x) = m(abs(x-m(x)))
+%
+% For intraclass correlation we assume mad(x)=mad(y) and so the divisors
+% cancel; further, we find a common estimate of the median mm=m([x,y])
+% can compute Sp & Sm as:
+%     Sp = (x-mm) + (y-mm);
+%     Sm = (x-mm) - (y-mm);
+%
+%
+% REFERENCES
+%
+% Shevlyakov, G., & Smirnov, P. (2011). Robust estimation of a
+% correlation coefficient: an attempt of survey. Australian & New
+% Zealand Journal of Statistics, 40(1), 147–156.
+% 
+% Kharin, Y. S., & Voloshko, V. A. (2011). Robust estimation of AR 
+% coefficients under simultaneously influencing outliers and missing 
+% values. Journal of Statistical Planning and Inference, 141(9),
+% 3276–3288.
+%
+% 2014-07-08
+% Thomas Nichols http://warwick.ac.uk/tenichols
+
+I=find(all(~isnan([x(:) y(:)]),2));
+if isempty(I)
+  rmad=NaN;
+else
+  mx    = median(x(I));
+  my    = median(y(I));
+  Sp    = (x(I)-mx) + (y(I)-my);
+  Sm    = (x(I)-mx) - (y(I)-my);
+  madSp = median(abs(Sp-median(Sp)));
+  madSm = median(abs(Sm-median(Sm)));
+  if madSp==0 && madSm==0
+    rmad = NaN;
+  else
+    rmad = (madSp^2 - madSm^2)/(madSp^2 + madSm^2);
+  end
+end
+
+
+function gsrY=fcn_GSR(Y)
+%Global Signal Regression
+%Inspired by FSLnets
+%For the fMRIDiag, it needs to be transposed. 
+
+Y=Y';
+mgrot=mean(Y,2); 
+gsrY=Y-(mgrot*(pinv(mgrot)*Y));
+gsrY=gsrY';
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%OLD CODE%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -376,97 +479,3 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Stat.DVARS2     = DVARS2;
-%Test stats
-Stat.E          = Mn;
-Stat.S          = sqrt(Va);
-Stat.nu         = nu;
-Stat.c          = c;
-Stat.pvals      = Pval;
-Stat.Zval       = Zval;
-%Standardised 
-Stat.RDVARS     = RelDVARS;
-Stat.SDVARS_X2  = NDVARS_X2;  %this dude is suggested to be used!
-Stat.SDVARS_X20 = NDVARS_X20;
-Stat.SDVARS_Z   = NDVARS_Z;
-%General info
-Stat.Mu0        = mean(IQRsd(Y));
-Stat.Y_MS       = mean(mean(Y.^2)); 
-Stat.dim        = [I1 T0];
-Stat.dim0       = [I0 T0];
-Stat.RobAC_Fail = find(ACf_idx);
-Stat.GrandMean  = mean(mvY);
-Stat.GrandMean0 = mean(mvY0);
-%Stat.NDVARS_Mu0 = (DVARS-Stat.Mu0)/sqrt(Stat.Y_MS)*100; 
-
-
-Stat.Config.TestMeth    =   testmeth;
-Stat.Config.PowerTrans  =   dd;
-Stat.Config.WhichExpVal =   MeanNms{WhichExpVal};
-Stat.Config.WhichVar    =   VarNms{WhichVar};
-Stat.Config.gsrflag     =   gsrflag;
-Stat.Config.Median2Norm =   md;
-Stat.Config.Scale2Norm  =   scl;
-
-function rmad = madicc(x,y)
-% Median Absolute Deviation Intraclass Correlation Coefficient
-%
-% Impliments Median Absolute Deviation Correlation Coefficient, (as
-% described in Shevlyakov & Smirnov (2011)), modified to be the
-% intraclass version of correlation.  The (non-intrasclass) 
-% estimate is
-%     r = ( mad(Sp)^2 - mad(Sm)^2 ) / ( mad(Sp)^2 + mad(Sm)^2 )
-% where
-%     Sp = (x-m(x))/mad(x) + (y-m(y))/mad(y);
-%     Sm = (x-m(x))/mad(x) - (y-m(y))/mad(y);
-% and m() is median and mad() is the median absolute deviation,
-%     mad(x) = m(abs(x-m(x)))
-%
-% For intraclass correlation we assume mad(x)=mad(y) and so the divisors
-% cancel; further, we find a common estimate of the median mm=m([x,y])
-% can compute Sp & Sm as:
-%     Sp = (x-mm) + (y-mm);
-%     Sm = (x-mm) - (y-mm);
-%
-%
-% REFERENCES
-%
-% Shevlyakov, G., & Smirnov, P. (2011). Robust estimation of a
-% correlation coefficient: an attempt of survey. Australian & New
-% Zealand Journal of Statistics, 40(1), 147–156.
-% 
-% Kharin, Y. S., & Voloshko, V. A. (2011). Robust estimation of AR 
-% coefficients under simultaneously influencing outliers and missing 
-% values. Journal of Statistical Planning and Inference, 141(9),
-% 3276–3288.
-%
-% 2014-07-08
-% Thomas Nichols http://warwick.ac.uk/tenichols
-
-I=find(all(~isnan([x(:) y(:)]),2));
-if isempty(I)
-  rmad=NaN;
-else
-  mx    = median(x(I));
-  my    = median(y(I));
-  Sp    = (x(I)-mx) + (y(I)-my);
-  Sm    = (x(I)-mx) - (y(I)-my);
-  madSp = median(abs(Sp-median(Sp)));
-  madSm = median(abs(Sm-median(Sm)));
-  if madSp==0 && madSm==0
-    rmad = NaN;
-  else
-    rmad = (madSp^2 - madSm^2)/(madSp^2 + madSm^2);
-  end
-end
-
-
-function gsrY=fcn_GSR(Y)
-%Global Signal Regression
-%Inspired from FSLnets
-%For the fMRIDiag, it needs to be transposed. 
-
-Y=Y';
-mgrot=mean(Y,2); 
-gsrY=Y-(mgrot*(pinv(mgrot)*Y));
-gsrY=gsrY';
