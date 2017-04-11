@@ -14,7 +14,7 @@ The toolbox can be used to:
 # Configuration
 
 ## Dependencies
-* MATLAB2016b (or later) statistical toolbox [required].
+* MATLAB2013b (or later) statistical toolbox [required].
 * `'/Nifti_Util'` for neuroimaging analysis [optional].
 * `FSL 5.0.9` (or later) to produce DSE variance images [optional].
 
