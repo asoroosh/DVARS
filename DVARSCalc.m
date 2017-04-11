@@ -276,7 +276,7 @@ if verbose
     disp(['--Test Method:          ' testmeth]);
     disp(['--ExpVal method:        ' MeanNms{WhichExpVal}]); 
     disp(['--VarEst method:        ' VarNms{WhichVar}]);
-    disp(['--Power Transformation: ' num2str(round(dd,2))]);
+    disp(['--Power Transformation: ' num2str(dd)]);
 end;
 
 switch testmeth
