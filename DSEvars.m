@@ -56,7 +56,7 @@ function [V,Stat]=DSEvars(V0,varargin)
 %   4) For inter-site/cohort comparison, it is recommended that the
 %   intensity is scale accordingly by option 'Norm' or 'Scale'.
 %
-%   5) If the input is set to be a CIFTI file, you require Nifti_Util 
+%   5) If the input is set to be a NIFTI file, you require Nifti_Util 
 %      (provided in the directory). For input of CIFTI you require to
 %      addpath the FieldTrip toolbox from: 
 %      http://www.fieldtriptoolbox.org/reference/ft_read_cifti 
@@ -88,7 +88,7 @@ function [V,Stat]=DSEvars(V0,varargin)
 %%%REFERENCES
 %
 %   Afyouni S. & Nichols T.E., Insights and inference for DVARS, 2017
-%   http://www.biorxiv.org/content/early/2017/04/06/125021
+%   http://www.biorxiv.org/content/early/2017/04/06/125021.1
 %
 %
 %%%
@@ -108,7 +108,10 @@ Row_labs = {'Avar','Dvar','Svar','Evar','g_Avar','g_Dvar','g_Svar','g_Evar'};
 Col_labs = {'MS','RMS','Percentage_of_whole','Relative_to_iid'};
 
 % Add toolbox to open the images-------
-addpath Nifti_Util
+if isempty(strfind(path,'Nifti_Util'))
+    disp('-Nifti_Util added to the path.')
+    addpath(genpath('Nifti_Util'));
+end
 % Input Check-------------------------
 
 gsrflag=0; verbose=1; DestDir=[]; md=[]; scl=[];
@@ -129,13 +132,13 @@ if sum(strcmpi(varargin,'scale'))
    md           =   1;
 end
 
-%temp
-if sum(strcmpi(varargin,'MeanImage'))
-   mYr    =   varargin{find(strcmpi(varargin,'MeanImage'))+1};
-   mYr=mYr(mYr~=0 & ~isnan(mYr));
-   %size(mYr)
-   md           =   median(mYr);
-end
+%---temp
+% if sum(strcmpi(varargin,'MeanImage'))
+%    mYr    =   varargin{find(strcmpi(varargin,'MeanImage'))+1};
+%    mYr=mYr(mYr~=0 & ~isnan(mYr));
+%    %size(mYr)
+%    md           =   median(mYr);
+% end
 
 if ischar(V0)
     [ffpathstr,ffname,ffext]=fileparts(V0);
@@ -169,7 +172,6 @@ elseif isnumeric(V0) && size(V0,1)<=size(V0,2)
 end
 
 mvY_WholeImage = mean(Y,2);
-
 %Remove voxels of zeros/NaNs---------------------------------------------------
 nan_idx    = find(isnan(sum(Y,2)));
 zeros_idx  = find(sum(Y,2)==0);
@@ -185,6 +187,7 @@ mvY_Untouched = mean(Y,2);
 IntnstyScl = @(Y,md,scl) (Y./md).*scl; 
 if ~isempty(scl) && isempty(md)
     md  = median(mean(Y,2)); %NB median of the mean image.
+    %md  = mean(mean(Y,2)); %NB *mean* of the mean image.
     Y   = IntnstyScl(Y,md,scl);
     if verbose; disp(['-Intensity Normalised by ' num2str(scl) '&' num2str(md) '.']); end;
 elseif ~isempty(scl) && ~isempty(md)
@@ -196,13 +199,13 @@ elseif isempty(scl) && isempty(md)
 else
     error('Something is wrong with param re: intensity normalisation')
 end
-
 %Centre the data-----------------------------
 mvY_NormInt    =    mean(Y,2); %later will be used as grand mean! don't touch it!
 dmeaner =    repmat(mvY_NormInt,[1,T0]);
 Y       =    Y-dmeaner; clear dmeaner
 
-mvY_Demeaned = mean(Y,2);  
+mvY_Demeaned = mean(Y,2);
+%----------
 if verbose; disp(['-Data centred. Untouched Grand Mean: ' num2str(mean(mvY_Untouched)) ', Post-norm Grand Mean: ' num2str(mean(mvY_NormInt)) ', Post demean: ' num2str(mean(mvY_Demeaned))]); end;
 %Data GSRed--------------------------------ONLY FOR TEST-----------------
 if gsrflag 
@@ -360,20 +363,24 @@ Stat.RMS        = RMS;
 Stat.Prntg      = Prntg;
 Stat.RelVar     = RelVar;
 Stat.VT         = Var_Tab;
+
 %Config
 Stat.dim        = [I1 T0];
 Stat.dim0       = [I0 T0];
+
 %Standardised DVARS
 Stat.DpDVARS    = (V.Dvar_ts-median(V.Dvar_ts))/mean(V.Avar_ts)*100; %< This is \Delta\%D-var
-Stat.pDvar      = V.Dvar_ts./mean(V.Avar_ts)*100; %< & this is \%D-var
-%Mean -- sanity checks
+Stat.pDvar      =  V.Dvar_ts./mean(V.Avar_ts)*100; %< & this is \%D-var
+
+%Mean -- 4 sanity checks
 Stat.GranMean_WholeBrain  = mean(mvY_WholeImage);
 Stat.GrandMean_Untouched  = mean(mvY_Untouched);
 Stat.GrandMean_NormInt    = mean(mvY_NormInt);
 Stat.GrandMean_Demeaned   = mean(mvY_Demeaned); 
+
 function gsrY=fcn_GSR(Y)
 %Global Signal Regression
-%Inspired from FSLnets
+%Inspired by FSLnets
 %For the fMRIDiag, it needs to be transposed. 
 % SA, UoW, 2017
 
