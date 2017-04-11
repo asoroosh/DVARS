@@ -40,6 +40,10 @@ function [V,Stat]=DSEvars(V0,varargin)
 %               Stat.RelVar:    Percentage of the whole variance relative
 %                               to the iid case.
 %
+%               Stat.DeltapDvar: \Delta\%D-var
+%               Stat.pDvar:      \%D-var
+%
+%
 %%%NOTES:
 %   1) It is recommended to only use time series of intra-cranial voxels as
 %   inclusding the extra-cranial may inflate the variance. You can use
@@ -195,7 +199,7 @@ elseif ~isempty(scl) && ~isempty(md)
     Y   = IntnstyScl(Y,md,scl);
     if verbose; disp(['-Intensity Scaled by ' num2str(scl) '.']); end;
 elseif isempty(scl) && isempty(md)    
-    disp('-No normalisation/scaling has been set!')
+    if verbose; disp('-No normalisation/scaling has been set!'); end;
 else
     error('Something is wrong with param re: intensity normalisation')
 end
@@ -369,8 +373,8 @@ Stat.dim        = [I1 T0];
 Stat.dim0       = [I0 T0];
 
 %Standardised DVARS
-Stat.DpDVARS    = (V.Dvar_ts-median(V.Dvar_ts))/mean(V.Avar_ts)*100; %< This is \Delta\%D-var
-Stat.pDvar      =  V.Dvar_ts./mean(V.Avar_ts)*100; %< & this is \%D-var
+Stat.DeltapDvar    = (V.Dvar_ts-median(V.Dvar_ts))/mean(V.Avar_ts)*100; %< This is \Delta\%D-var
+Stat.pDvar          =  V.Dvar_ts./mean(V.Avar_ts)*100; %< & this is \%D-var
 
 %Mean -- 4 sanity checks
 Stat.GranMean_WholeBrain  = mean(mvY_WholeImage);
