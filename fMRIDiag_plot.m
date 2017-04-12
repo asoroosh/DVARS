@@ -1,11 +1,14 @@
-function fMRIDiag_plot(V,varargin)
-% fMRIDiag_plot(V,varargin)
+function fMRIDiag_plot(V,D_Stat,varargin)
+% fMRIDiag_plot(V,D_Stat,varargin)
 % Draws main var components (+ non-global comps) with BOLD intensity for
 % further diagnosis. 
 %
 %%%%INPUTS
-%   V :  is a structure which contains the variance components. For more
-%       information regarding how to estimate the V, please see DSEvars.m
+%   V       :  Is a structure which contains the variance components. For more
+%              information regarding how to estimate the V, please see DSEvars.m
+%
+%   D_Stat :   Is a structure which contains the statistics of DVARS
+%              inference. Can be obtained via DVARSCalc.m. 
 %
 %   The following arguments are optional:
 %
@@ -19,7 +22,9 @@ function fMRIDiag_plot(V,varargin)
 %                 (rotation and trasnlational)
 %
 %   'Idx'       : The index of significant DVARS spikes which can be calculated
-%                 via DVARSCalc.m
+%                 via DVARSCalc.m. If the argument is not used, the
+%                 Idx is found via Bonferroni correction on p-values of
+%                 D_Stat structure.
 %
 %   'BOLD'      : Intensity BOLD image. If triggered, a subplot is added at the
 %                 bottom of the figure. 
@@ -33,8 +38,7 @@ function fMRIDiag_plot(V,varargin)
 %   'TickScaler' : If set to <1 then the number of ticks on the right y-axis 
 %                  DSEvars sub-figure will be less. If set to >1, then more 
 %                  ticks is shown [Default: 1]
-%
-%   'GrandMean'  : Grand Mean of the image. [Default: 100, as per Afyouni&Nichols 2017]
+%   
 %
 %   'verbose'    : Print the log? if yes, set to 1, if not set to 0. 
 %
@@ -90,16 +94,17 @@ function fMRIDiag_plot(V,varargin)
 %   Please report bugs to srafyouni@gmail.com
 %
 
-FDflag  = 0;  AbsMovflag = 0;  BOLDFlag  = 0;  Idx     = [];
-md      = []; scl        = []; verbose   = 1;  gsrflag = 0;
-nsp     = 14; lw         = 2;  lfs       = 12;
-TickScaler = 1;  GrandMean = 100;
+FDflag  = 0;    AbsMovflag = 0;  BOLDFlag  = 0;  
+md      = [];   scl        = []; verbose   = 1;  gsrflag = 0;
+nsp     = 14;   lw         = 2;  lfs       = 14; noColRngflag = 0;
+TickScaler = 1; %GrandMean = 100;
 if sum(strcmpi(varargin,'gsrflag'))
    gsrflag      =   varargin{find(strcmpi(varargin,'gsrflag'))+1};
 end
-if sum(strcmpi(varargin,'GrandMean'))
-   GrandMean      =   varargin{find(strcmpi(varargin,'GrandMean'))+1};
-end
+% if sum(strcmpi(varargin,'GrandMean')) %needed for time when we had global
+% timeseries on the plot.
+%    GrandMean      =   varargin{find(strcmpi(varargin,'GrandMean'))+1};
+% end
 if sum(strcmpi(varargin,'fd'))
    FDts      =   varargin{find(strcmpi(varargin,'fd'))+1};
    FDflag    =   1; 
@@ -111,28 +116,50 @@ if sum(strcmpi(varargin,'AbsMov'))
    AbsMov     =   varargin{find(strcmpi(varargin,'AbsMov'))+1};
    AbsMovflag =   1;
 end
+%
 if sum(strcmpi(varargin,'idx'))
    Idx     =   varargin{find(strcmpi(varargin,'idx'))+1};
+else
+   Idx     =   find(D_Stat.pvals<0.05./(D_Stat.dim(2)-1)); 
 end
+%
+if sum(strcmpi(varargin,'Thick'))
+   Thickness = varargin{find(strcmpi(varargin,'Thick'))+1};
+elseif D_Stat.dim(2)>500
+   Thickness = 1;
+else
+   Thickness = 0.5;   
+end
+%
+if sum(strcmpi(varargin,'PracticalThreshold'))
+   psig     =   varargin{find(strcmpi(varargin,'PracticalThreshold'))+1};
+else
+   psig     =   5; % 5% level of pratical significance.  
+end
+%
 if sum(strcmpi(varargin,'BOLD'))
    Y        =   varargin{find(strcmpi(varargin,'BOLD'))+1};
    BOLDFlag = 1;
    nsp      = 20;
 end
+%
 if sum(strcmpi(varargin,'figure'))
     f_hdl          =   varargin{find(strcmpi(varargin,'figure'))+1};
 else
     f_hdl=figure('position',[50,500,1600,1400]); 
     hold on; box on; 
 end
+%
 if sum(strcmpi(varargin,'colrng'))
-   ColRng      =   varargin{find(strcmpi(varargin,'colrng'))+1};
+   ColRng           =   varargin{find(strcmpi(varargin,'colrng'))+1};
 else
-    ColRng     =   [-10 10];
+    noColRngflag    =   1;
 end
+%
 if sum(strcmpi(varargin,'norm'))
    scl          =   varargin{find(strcmpi(varargin,'norm'))+1};
 end
+%
 if sum(strcmpi(varargin,'TickScaler'))
    TickScaler          =   varargin{find(strcmpi(varargin,'TickScaler'))+1};
 end
@@ -140,14 +167,15 @@ if sum(strcmpi(varargin,'scale'))
    scl          =   varargin{find(strcmpi(varargin,'scale'))+1};
    md           =   1;
 end
+%
 if sum(strcmpi(varargin,'verbose'))
    verbose      =   varargin{find(strcmpi(varargin,'verbose'))+1};
 end
-
+%
 if sum(strcmpi(varargin,'linewidth'))
    lw      =   varargin{find(strcmpi(varargin,'linewidth'))+1};   
 end
-
+%
 if sum(strcmpi(varargin,'fontsize'))
    lfs     =   varargin{find(strcmpi(varargin,'fontsize'))+1};
 end
@@ -168,14 +196,6 @@ Time=1:T;
 hTime=(1:(T-1))+0.5;
 eTime=[1 T];
 
-if sum(strcmpi(varargin,'Thick'))
-   Thickness = varargin{find(strcmpi(varargin,'Thick'))+1};
-elseif T>500
-   Thickness = 1;
-else
-   Thickness = 0.5;   
-end
-
 %###################################################################################
 
 figure(f_hdl)
@@ -195,9 +215,9 @@ if  FDflag
     sph0=subplot(nsp,1,[1 2]);
     hold on; box on;
     yyaxis left
-        plot(hTime,FDts,'color','k','linestyle','-','linewidth',lw-0.5)
-        plot(hTime,ones(1,T-1)*0.5,'linewidth',lw,'linestyle','-.','color','r')
-        plot(hTime,ones(1,T-1)*0.2,'linewidth',lw,'linestyle','-.','color','r')
+        FDline=plot(hTime,FDts,'color','k','linestyle','-','linewidth',lw-0.5);
+        plot(hTime,ones(1,T-1)*0.5,'linewidth',lw,'linestyle','-.','color','r');
+        plot(hTime,ones(1,T-1)*0.2,'linewidth',lw,'linestyle','-.','color','r');
         
         if max(FDts)>0.6
             ylim([0 max(FDts)+0.1]);
@@ -213,10 +233,12 @@ if  FDflag
         set(sph0,'ygrid','on','xticklabel',[],'xlim',[1 T],'ytick',[0.2 0.5],'ycolor','k')
         if AbsMovflag
             yyaxis right
-                plot(Time,AbsMov(:,1),'color',FDcol+[0.1,0.3,0.3],'linestyle','-','linewidth',lw-0.9)
-                plot(Time,AbsMov(:,2),'color',FDcol+[0.1,0.5,0.5],'linestyle','-','linewidth',lw-0.9)
+                mov1line=plot(Time,AbsMov(:,1),'color',FDcol+[0.1,0.3,0.3],'linestyle','-','linewidth',lw-0.9);
+                mov2line=plot(Time,AbsMov(:,2),'color',FDcol+[0.1,0.5,0.5],'linestyle','-','linewidth',lw-0.9);
                 axis tight
-                ylabel('|D| (mm)','fontsize',lfs,'interpreter','latex');
+                ylabel('D (mm)','fontsize',lfs,'interpreter','latex');
+                
+                legend([FDline mov1line mov2line],{'FD','|Rotation|','|Translation|'},'location','northwest')
         else
             yyaxis right
             set(sph0,'yticklabel',[],'ycolor','k')
@@ -228,16 +250,16 @@ sph1=subplot(nsp,1,[3 11]);
 hold on; box on;
 %title('DSE Variance Decomposition (RMS units)','fontsize',13)
 yyaxis(sph1,'left')
-    line(Time,sqrt(V.Avar_ts),'LineStyle','-','linewidth',lw,'color',Acol)
+    Aline=line(Time,sqrt(V.Avar_ts),'LineStyle','-','linewidth',lw,'color',Acol);
     line(Time,ones(1,T).*mean(sqrt(V.Avar_ts)),'LineStyle',':','linewidth',.5,'color',Acol)
     
-    line(hTime,sqrt(V.Dvar_ts),'LineStyle','-','linewidth',lw,'color',Dcol)
+    Dline=line(hTime,sqrt(V.Dvar_ts),'LineStyle','-','linewidth',lw,'color',Dcol);
     line(hTime,ones(1,T-1).*mean(sqrt(V.Dvar_ts)),'LineStyle',':','linewidth',.5,'color',Dcol)
     
-    line(hTime,sqrt(V.Svar_ts),'LineStyle','-','linewidth',lw,'color',Scol)
+    Sline=line(hTime,sqrt(V.Svar_ts),'LineStyle','-','linewidth',lw,'color',Scol);
     line(hTime,ones(1,T-1).*mean(sqrt(V.Svar_ts)),'LineStyle',':','linewidth',.5,'color',Scol)
     
-    line(eTime,sqrt(V.Evar_ts),'LineStyle','none','Marker','o','markerfacecolor',Ecol,'linewidth',3,'color',Ecol)
+    Edots=line(eTime,sqrt(V.Evar_ts),'LineStyle','none','Marker','o','markerfacecolor',Ecol,'linewidth',3,'color',Ecol);
     ylabel('$\sqrt{\mathrm{Variance}}$','fontsize',lfs,'interpreter','latex')  
     YLim2=ylim.^2/mean(V.Avar_ts)*100;
     set(sph1,'ycolor','k','xlim',[1 T])
@@ -250,15 +272,48 @@ yyaxis(sph1,'right')
     set(h,'linestyle','-','color',[.5 .5 .5]); %the grids!
     set(sph1,'ycolor','k','xlim',[1 T])
     
-PatchMeUp(Idx,Thickness);
+h_Idx=PatchMeUp(Idx,Thickness);
+legend([Aline Dline Sline Edots h_Idx(1)],{'A-var','D-var','S-var','E-var','Statistically Significant'},'location','northwest')
 
 %---------------------------Global%---------------------------
+% sph2=subplot(nsp,1,[12 13]); 
+% hold on; box on;
+% %yyaxis(sph2,'left')
+%     cntrd_g_ts=V.g_Ats+GrandMean;
+%     plot(Time,cntrd_g_ts,'color',Acol,'linestyle','-','linewidth',lw);
+%     %line(hTime,ones(1,T-1).*mean(V.g_Ats+mean(V.MeanOrig)),'LineStyle','-.','linewidth',.5,'color',Acol)
+%     
+% %%%%%%%%%%%%%%%%%%%% Un-ccomment next 4 code lines if you need to see the gDvar and gSvar. %%%%%%%%%%%%%%%%%%%% 
+%     %plot(hTime,V.g_Dts+mean(V.MeanOrig),'color',Dcol,'linestyle','-','linewidth',lw);
+%     %line(hTime,ones(1,T-1).*(mean(V.g_Dts)+mean(V.MeanOrig)),'LineStyle','-.','linewidth',.5,'color',Dcol)
+%     
+%     %plot(hTime,V.g_Sts+mean(V.MeanOrig),'color',Scol,'linestyle','-','linewidth',lw);
+%     %line(hTime,ones(1,T-1).*(mean(V.g_Sts)+mean(V.MeanOrig)),'LineStyle','-.','linewidth',.5,'color',Scol)
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%     
+%     mx_cntrd_g_ts=max(cntrd_g_ts); mn_cntrd_g_ts=min(cntrd_g_ts);
+%     stps=abs(round(diff([mx_cntrd_g_ts mn_cntrd_g_ts])./3,1));
+%     Ytcks=round(min(cntrd_g_ts):stps:max(cntrd_g_ts),2);
+%     
+%     ylabel('A$_{Gt}$','fontsize',lfs,'interpreter','latex')
+%     %axis tight
+%     %set(sph2,'ycolor','k')
+%     %Ylim=ylim; Ylim=mean(Ylim)+0.5*[-1,1]*diff(Ylim)*2; ylim(Ylim)
+%     %ylim_tmp=ylim; dylim_tmp=(ylim_tmp-mean(V.MeanOrig)); dylims_tmp=dylim_tmp./abs(dylim_tmp);
+%     %YLim22=(dylim_tmp.^2/mean(V.Avar_ts));
+%     %YLim22=((dylim_tmp.^2/mean(V.Avar_ts))-mean(YLim22))*100;
+%     set(sph2,'ygrid','on','xlim',[1 T],'ycolor','k','yTick',Ytcks)
+%     ytickformat('%,.2f')
+%     
+% axis tight
+% PatchMeUp(Idx,Thickness);
+
+%---------------------------\Delta\%D-var---------------------------
 sph2=subplot(nsp,1,[12 13]); 
 hold on; box on;
 %yyaxis(sph2,'left')
-    cntrd_g_ts=V.g_Ats+GrandMean;
-    plot(Time,cntrd_g_ts,'color',Acol,'linestyle','-','linewidth',lw);
-    %line(hTime,ones(1,T-1).*mean(V.g_Ats+mean(V.MeanOrig)),'LineStyle','-.','linewidth',.5,'color',Acol)
+    plot(hTime,D_Stat.DeltapDvar,'color',Dcol,'linestyle','-','linewidth',lw);
+    %line(hTime,ones(1,T-1).*psig,'LineStyle','-.','linewidth',.5,'color','r');
     
 %%%%%%%%%%%%%%%%%%%% Un-ccomment next 4 code lines if you need to see the gDvar and gSvar. %%%%%%%%%%%%%%%%%%%% 
     %plot(hTime,V.g_Dts+mean(V.MeanOrig),'color',Dcol,'linestyle','-','linewidth',lw);
@@ -268,22 +323,20 @@ hold on; box on;
     %line(hTime,ones(1,T-1).*(mean(V.g_Sts)+mean(V.MeanOrig)),'LineStyle','-.','linewidth',.5,'color',Scol)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    mx_cntrd_g_ts=max(cntrd_g_ts); mn_cntrd_g_ts=min(cntrd_g_ts);
-    stps=abs(round(diff([mx_cntrd_g_ts mn_cntrd_g_ts])./3,1));
-    Ytcks=round(min(cntrd_g_ts):stps:max(cntrd_g_ts),2);
+    mx_cntrd_g_ts=max(D_Stat.DeltapDvar); mn_cntrd_g_ts=min(D_Stat.DeltapDvar);
+    stps=abs(round(diff([mx_cntrd_g_ts mn_cntrd_g_ts])./4));
+    Ytcks=round(mn_cntrd_g_ts:stps:mx_cntrd_g_ts,2);
     
-    ylabel('A$_{Gt}$','fontsize',lfs,'interpreter','latex')
-    %axis tight
-    %set(sph2,'ycolor','k')
-    %Ylim=ylim; Ylim=mean(Ylim)+0.5*[-1,1]*diff(Ylim)*2; ylim(Ylim)
-    %ylim_tmp=ylim; dylim_tmp=(ylim_tmp-mean(V.MeanOrig)); dylims_tmp=dylim_tmp./abs(dylim_tmp);
-    %YLim22=(dylim_tmp.^2/mean(V.Avar_ts));
-    %YLim22=((dylim_tmp.^2/mean(V.Avar_ts))-mean(YLim22))*100;
-    set(sph2,'ygrid','on','xlim',[1 T],'ycolor','k','yTick',Ytcks)
+    ylabel('$\Delta\%D$-var','fontsize',lfs,'interpreter','latex')
+    set(sph2,'ygrid','on','xlim',[1 T-1],'ycolor','k','yTick',Ytcks)
     ytickformat('%,.2f')
-    
 axis tight
-PatchMeUp(Idx,Thickness);
+
+pIdx=find(D_Stat.DeltapDvar>psig);
+
+h_pIdx=PatchMeUp(pIdx,Thickness,'r');
+h_Idx=PatchMeUp(setdiff(Idx,pIdx),Thickness);
+legend([h_Idx(1) h_pIdx(1)],{'Statistically Significant','Pratically Significant'},'location','northwest')
 %---------------------------The big dude%---------------------------
 if BOLDFlag
     if ~isnumeric(Y) && size(Y,1)<=size(Y,2); error('Unknown BOLD intensity image!'); end
@@ -327,7 +380,11 @@ if BOLDFlag
     sph3=subplot(nsp,1,[15 20]);
     hold on; box on;
     colormap(sph3,'gray');
-    imagesc(Y,ColRng)
+    if noColRngflag
+        imagesc(Y)
+    else
+        imagesc(Y,ColRng)
+    end
     ylabel('Voxels','fontsize',lfs,'interpreter','latex')
     set(sph3,'xticklabel',[])
     axis tight
@@ -441,20 +498,27 @@ return
 %###################################################################################
 function ph=PatchMeUp(Idx,varargin)
 %   Draws a patch across the significantly identified scans on var plots
+%   
+%   Internal function. Used in Diagnostics and DVARS plots. 
 %
 %   SA, 2017, UoW
 %   srafyouni@gmail.com
 if nargin == 1
-    stpjmp=1;
+    stpjmp  = 1;
+    Lcol    = [.5 .5 .5];
 elseif nargin == 2
-    stpjmp=varargin{1};
+    stpjmp = varargin{1};
+    Lcol    = [.5 .5 .5];
+elseif nargin == 3
+    stpjmp  = varargin{1};
+    Lcol    = varargin{2};
 end
 
 yyll=ylim;
 for ii=1:numel(Idx)
     xtmp=[Idx(ii)-stpjmp   Idx(ii)-stpjmp   Idx(ii)+stpjmp  Idx(ii)+stpjmp];
     ytmp=[yyll(1)               yyll(2)         yyll(2)        yyll(1)    ];
-    ph(ii)=patch(xtmp,ytmp,[.5 .5 .5],'FaceAlpha',0.3,'edgecolor','none');
+    ph(ii)=patch(xtmp,ytmp,Lcol,'FaceAlpha',0.3,'edgecolor','none');
     clear *tmp
 end
 return 
