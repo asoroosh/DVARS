@@ -14,8 +14,8 @@ function [FDts,Stat]=FDCalc(MP,varargin)
 %
 %   FDts                : Frame-Wise Displacement
 %   Stat.SS             : Sum of square of the movements.
-%   Stat.FD_0{2,4}_Idx  : Index of scans exceeding the 0.2/0.4mm threshold
-%   Stat.FD_0{2,4}_p    : % of the scans explained above
+%   Stat.FD_0{2,5}_Idx  : Index of scans exceeding the 0.2/0.5mm threshold
+%   Stat.FD_0{2,5}_p    : % of the scans explained above
 %   Stat.AbsRot         : Absolute sum of rotation dip 
 %   Stat.AbsTrans       : Absolute sum of translational disp
 %   Stat.AbsRot & Stat.AbsRot : Absolute sum of one-lag difference 
@@ -63,9 +63,9 @@ SS   = sqrt(sum(dMP.^2,2));
 
 Stat.SS         = SS;
 Stat.FD_02_Idx  = find(FDts>0.2);
-Stat.FD_04_Idx  = find(FDts>0.4);
+Stat.FD_05_Idx  = find(FDts>0.5);
 Stat.FD_02_p    = length(Stat.FD_02_Idx)./length(FDts)*100;
-Stat.FD_04_p    = length(Stat.FD_04_Idx)./length(FDts)*100;
+Stat.FD_05_p    = length(Stat.FD_05_Idx)./length(FDts)*100;
 Stat.AbsRot     = sum(abs(MP(:,r_Idx)),2);
 Stat.AbsTrans   = sum(abs(MP(:,t_idx)),2);
 Stat.AbsDiffRot     = sum(abs(diff(MP(:,r_Idx))),2);
