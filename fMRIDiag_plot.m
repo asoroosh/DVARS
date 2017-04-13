@@ -213,10 +213,10 @@ figure(f_hdl)
 
 %---------------------------FD%---------------------------
 if  FDflag
-    sph0=subplot(nsp,1,[1 2]);
+    sph0 = subplot(nsp,1,[1 2]);
     hold on; box on;
     yyaxis left
-        FDline=plot(hTime,FDts,'color','k','linestyle','-','linewidth',lw-0.5);
+        FDline = plot(hTime,FDts,'color','k','linestyle','-','linewidth',lw-0.5);
         plot(hTime,ones(1,T-1)*0.5,'linewidth',lw,'linestyle','-.','color','r');
         plot(hTime,ones(1,T-1)*0.2,'linewidth',lw,'linestyle','-.','color','r');
         
@@ -251,29 +251,29 @@ sph1=subplot(nsp,1,[3 11]);
 hold on; box on;
 %title('DSE Variance Decomposition (RMS units)','fontsize',13)
 yyaxis(sph1,'left')
-    Aline=line(Time,sqrt(V.Avar_ts),'LineStyle','-','linewidth',lw,'color',Acol);
+    Aline = line(Time,sqrt(V.Avar_ts),'LineStyle','-','linewidth',lw,'color',Acol);
     line(Time,ones(1,T).*mean(sqrt(V.Avar_ts)),'LineStyle',':','linewidth',.5,'color',Acol)
     
-    Dline=line(hTime,sqrt(V.Dvar_ts),'LineStyle','-','linewidth',lw,'color',Dcol);
+    Dline = line(hTime,sqrt(V.Dvar_ts),'LineStyle','-','linewidth',lw,'color',Dcol);
     line(hTime,ones(1,T-1).*mean(sqrt(V.Dvar_ts)),'LineStyle',':','linewidth',.5,'color',Dcol)
     
-    Sline=line(hTime,sqrt(V.Svar_ts),'LineStyle','-','linewidth',lw,'color',Scol);
+    Sline = line(hTime,sqrt(V.Svar_ts),'LineStyle','-','linewidth',lw,'color',Scol);
     line(hTime,ones(1,T-1).*mean(sqrt(V.Svar_ts)),'LineStyle',':','linewidth',.5,'color',Scol)
     
-    Edots=line(eTime,sqrt(V.Evar_ts),'LineStyle','none','Marker','o','markerfacecolor',Ecol,'linewidth',3,'color',Ecol);
+    Edots = line(eTime,sqrt(V.Evar_ts),'LineStyle','none','Marker','o','markerfacecolor',Ecol,'linewidth',3,'color',Ecol);
     ylabel('$\sqrt{\mathrm{Variance}}$','fontsize',lfs,'interpreter','latex')  
-    YLim2=ylim.^2/mean(V.Avar_ts)*100;
+    YLim2 = ylim.^2/mean(V.Avar_ts)*100;
     set(sph1,'ycolor','k','xlim',[1 T])
 yyaxis(sph1,'right')
-    YTick2=PrettyTicks(YLim2,TickScaler); YTick=sqrt(YTick2);
+    YTick2 = PrettyTicks(YLim2,TickScaler); YTick=sqrt(YTick2);
     set(sph1,'XTick',[],'Ylim',sqrt(YLim2),'YTick',sqrt(YTick2),'YtickLabel',num2str([YTick2']));
     ylabel('\% of A-var','fontsize',lfs,'interpreter','latex')
     %set(sph2,'ygrid','on')
-    h=abline('h',YTick);
+    h = abline('h',YTick);
     set(h,'linestyle','-','color',[.5 .5 .5]); %the grids!
     set(sph1,'ycolor','k','xlim',[1 T])
     
-h_Idx=PatchMeUp(Idx,Thickness);
+h_Idx = PatchMeUp(Idx,Thickness);
 legend([Aline Dline Sline Edots h_Idx(1)],{'A-var','D-var','S-var','E-var','Statistically Significant'},'location','northwest')
 
 %---------------------------Global%---------------------------
@@ -324,16 +324,17 @@ hold on; box on;
     %line(hTime,ones(1,T-1).*(mean(V.g_Sts)+mean(V.MeanOrig)),'LineStyle','-.','linewidth',.5,'color',Scol)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    mx_cntrd_g_ts=max(D_Stat.DeltapDvar); mn_cntrd_g_ts=min(D_Stat.DeltapDvar);
-    stps=abs(round(diff([mx_cntrd_g_ts mn_cntrd_g_ts])./4.5));
-    Ytcks=round(mn_cntrd_g_ts:stps:mx_cntrd_g_ts);
+    mx_cntrd_g_ts = max(D_Stat.DeltapDvar); mn_cntrd_g_ts = min(D_Stat.DeltapDvar);
+    stps = abs(round(diff([mx_cntrd_g_ts mn_cntrd_g_ts])./4.5));
+    Ytcks = round(mn_cntrd_g_ts:stps:mx_cntrd_g_ts);
     
     ylabel('$\Delta\%D$-var','fontsize',lfs,'interpreter','latex')
     set(sph2,'ygrid','on','xlim',[1 T-1],'ycolor','k','yTick',Ytcks)
     %ytickformat('%,.2f')
 axis tight
 
-pIdx=find(D_Stat.DeltapDvar>psig);
+pIdx = find(D_Stat.DeltapDvar>psig);
+pIdx = intersect(Idx,pIdx); %only if they are statistically sig as well!
 
 h_pIdx=PatchMeUp(pIdx,Thickness,PsigCol);
 
@@ -344,7 +345,7 @@ legend([h_pIdx(1)],{'Practically Significant'},'location','northwest')
 %---------------------------The big dude%---------------------------
 if BOLDFlag
     if ~isnumeric(Y) && size(Y,1)<=size(Y,2); error('Unknown BOLD intensity image!'); end
-    I0= size(Y,1); T0 = size(Y,2);
+    I0 = size(Y,1); T0 = size(Y,2);
     %Remove voxels of zeros/NaNs-----------------
     nan_idx    = find(isnan(sum(Y,2)));
     zeros_idx  = find(sum(Y,2)==0);
@@ -422,14 +423,14 @@ function T=PrettyTicks(Lim,varargin)
 %
 MinTick=3;  % Minimum number of tick locations
 if ~isempty(varargin)
-    TickSp=[15 5 2.5 1 0.5 0.2]./varargin{1};
+    TickSp = [15 5 2.5 1 0.5 0.2]./varargin{1};
 elseif isempty(varargin)
-    TickSp=[15 5 2.5 1 0.5 0.2];
+    TickSp = [15 5 2.5 1 0.5 0.2];
 end
 ts=0;
 T=[];
 while length(T)<MinTick
-  ts=ts+1;
+  ts = ts+1;
   if ts>length(TickSp)
     break
   end
@@ -536,7 +537,7 @@ function gsrY=fcn_GSR(Y)
 %   SA, 2017, UoW
 %   srafyouni@gmail.com
 %
-Y=Y';
-mgrot=mean(Y,2); 
-gsrY=Y-(mgrot*(pinv(mgrot)*Y));
-gsrY=gsrY';
+Y = Y';
+mgrot = mean(Y,2); 
+gsrY = Y-(mgrot*(pinv(mgrot)*Y));
+gsrY = gsrY';
