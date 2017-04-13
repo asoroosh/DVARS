@@ -10,6 +10,12 @@ V0=['/Volumes/HCP_S900/HCP_10Unrel_Vols/115320/115320/MNINonLinear/Results/rfMRI
 %%%%%%%%%%%%%%%%%%%%%%%EXAMPLE 1%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% This is the simplest form of using DSE variance decomposition and DVARS
+% inference on the data. As the example is for HCP data, we used 1/100
+% downscaling factor. The scale/norm factors should be changed for other
+% data-sets (However, if you have processed your data via FSL, leave the 
+% scaling 1/100 as it is).
+
 %--NIFTI--------------------------------------------
 V1 = load_untouch_nii(V0);
 V2 = V1.img; 
@@ -33,6 +39,11 @@ fMRIDiag_plot(V,DVARS_Stat)
 %%%%%%%%%%%%%%%%%%%%%%%EXAMPLE 2%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% In this example, you can see how to add BOLD intensity images to your
+% figure to have a better understanding the of the effect of spikes/excursions 
+% in your variance components. Read help section of 'fMRIDiag_plot' for
+% further parameters that can be used. 
+
 %--NIFTI--------------------------------------------
 V1 = load_untouch_nii(V0);
 V2 = V1.img; 
@@ -55,6 +66,11 @@ fMRIDiag_plot(V,DVARS_Stat,'BOLD',Y,'ColRng',[0 100])
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%EXAMPLE 3%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% In this example, it is assumed that the desplacement information has also
+% been provided for a subject. An extra sub-plot, automatically, is added
+% to the top of your figure to report the FD and Absolute values of the
+% movements acquired via 'FDCalc'. 
 
 %--NIFTI--------------------------------------------
 V1 = load_untouch_nii(V0);

@@ -244,7 +244,7 @@ if nflag
     Rob_S = IQRsd(Y');
     AC    = zeros(1,I1);
     for iv=1:I1
-        if (~mod(iv,10e2) && verbose); disp(['--voxel: ' num2str(iv)]); end;
+        if (~mod(iv,10e4) && verbose); disp(['--voxel: ' num2str(iv)]); end;
         AC(iv) = madicc(Y(iv,1:end-1),Y(iv,2:end));
     end
     

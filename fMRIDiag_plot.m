@@ -184,11 +184,12 @@ end
 
 Col=get(groot,'defaultAxesColorOrder');
 Acol=Col(5,:); % Green
-%FDcol=Col(2,:); % Red (/orange!)
 FDcol=[.5 .5 .5];
 Dcol=Col(1,:); % Blue
 Scol=Col(3,:); % Yellow
 Ecol=Col(4,:); % Purple
+
+PsigCol=Col(2,:); % Red (/orange!)
 
 T=length(V.Avar_ts);
 Time=1:T;
@@ -324,19 +325,22 @@ hold on; box on;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     mx_cntrd_g_ts=max(D_Stat.DeltapDvar); mn_cntrd_g_ts=min(D_Stat.DeltapDvar);
-    stps=abs(round(diff([mx_cntrd_g_ts mn_cntrd_g_ts])./4));
-    Ytcks=round(mn_cntrd_g_ts:stps:mx_cntrd_g_ts,2);
+    stps=abs(round(diff([mx_cntrd_g_ts mn_cntrd_g_ts])./4.5));
+    Ytcks=round(mn_cntrd_g_ts:stps:mx_cntrd_g_ts);
     
     ylabel('$\Delta\%D$-var','fontsize',lfs,'interpreter','latex')
     set(sph2,'ygrid','on','xlim',[1 T-1],'ycolor','k','yTick',Ytcks)
-    ytickformat('%,.2f')
+    %ytickformat('%,.2f')
 axis tight
 
 pIdx=find(D_Stat.DeltapDvar>psig);
 
-h_pIdx=PatchMeUp(pIdx,Thickness,'r');
-h_Idx=PatchMeUp(setdiff(Idx,pIdx),Thickness);
-legend([h_Idx(1) h_pIdx(1)],{'Statistically Significant','Pratically Significant'},'location','northwest')
+h_pIdx=PatchMeUp(pIdx,Thickness,PsigCol);
+
+%h_Idx=PatchMeUp(setdiff(Idx,pIdx),Thickness);
+
+%legend([h_Idx(1) h_pIdx(1)],{'Statistically Significant','Practically Significant'},'location','northwest')
+legend([h_pIdx(1)],{'Practically Significant'},'location','northwest')
 %---------------------------The big dude%---------------------------
 if BOLDFlag
     if ~isnumeric(Y) && size(Y,1)<=size(Y,2); error('Unknown BOLD intensity image!'); end
