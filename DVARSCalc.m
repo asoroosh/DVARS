@@ -182,6 +182,8 @@ elseif isnumeric(V0) && size(V0,1)<=size(V0,2)
     error('Check the input, matrix should be in form of IxT, where I=XxYxZ!');    
 end
 
+Y = double(Y);%to work with int 16bit as well.
+
 %Remove voxels of zeros/NaNs----------------------------------------------
 nan_idx    = find(isnan(sum(Y,2)));
 zeros_idx  = find(sum(Y,2)==0);
