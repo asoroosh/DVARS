@@ -94,6 +94,9 @@ function [DVARS,Stat]=DVARSCalc(V0,varargin)
 %   Please report bugs to srafyouni@gmail.com
 %
 
+%External updates:
+% Brunno M. Campos <brunno@fcm.unicamp.br>: int 16bit to double
+
 %ParCheck------------------------------------------------------------------
 NDVARS_X2 = 'N/A'; NDVARS_Z = 'N/A'; RelDVARS = 'N/A';
 
@@ -172,7 +175,7 @@ if ischar(V0)
     if verbose; disp('-Image loaded.'); end;
 elseif isnumeric(V0) && size(V0,1)>size(V0,2)
     if verbose; disp('-Input is a Matrix.'); end;
-    Y = V0;
+    Y = double(V0); %Just to ensure it works with int 16bit as well. 
     I0= size(Y,1); T0 = size(Y,2);
 elseif isnumeric(V0) && size(V0,1)<=size(V0,2)
     if verbose; disp('-Input is a Matrix.'); end;
