@@ -100,40 +100,41 @@ function [DVARS,Stat]=DVARSCalc(V0,varargin)
 %ParCheck------------------------------------------------------------------
 NDVARS_X2 = 'N/A'; NDVARS_Z = 'N/A'; RelDVARS = 'N/A';
 
-testmeth    = 'X2';  nflag       = 0;
+testmeth    = 'X2'; nflag       = 0;
 dd          = 1;    verbose     = 1;
 WhichExpVal = 3;    WhichVar    = 3;
 ACf_idx     = [];   gsrflag     = 0; 
 md          = [];   scl         = [];
 
-% Add toolbox to open the images-------------------------------------------
-if isempty(strfind(path,'Nifti_Util'))
-    disp('-Nifti_Util added to the path.')
-    addpath(genpath('Nifti_Util'));
-end
 % Input Check--------------------------------------------------------------
 if sum(strcmpi(varargin,'gsrflag'))
    gsrflag      =   varargin{find(strcmpi(varargin,'gsrflag'))+1};
 end
+%
 if sum(strcmpi(varargin,'verbose'))
    verbose      =   varargin{find(strcmpi(varargin,'verbose'))+1};
 end
+%
 if sum(strcmpi(varargin,'TestMethod'))
    testmeth     =   varargin{find(strcmpi(varargin,'TestMethod'))+1};
    if strcmpi(testmeth,'Z')
        WhichExpVal = 3;
    end
 end
+%
 if sum(strcmpi(varargin,'transpower'))
    dd           =   varargin{find(strcmpi(varargin,'transpower'))+1};
 end
+%
 if sum(strcmpi(varargin,'RDVARS'))
    %nflag        =   varargin{find(strcmpi(varargin,'RDVARS'))+1};
    nflag        =   1;
 end
+%
 if sum(strcmpi(varargin,'MeanType'))
    WhichExpVal  =   varargin{find(strcmpi(varargin,'MeanType'))+1};
 end
+%
 if sum(strcmpi(varargin,'VarType'))
    switch varargin{find(strcmpi(varargin,'VarType'))+1}
     case 'IQR'
@@ -144,6 +145,7 @@ if sum(strcmpi(varargin,'VarType'))
         error('Unknown VarType! Choose either IQR and hIQR')
     end
 end
+%
 if sum(strcmpi(varargin,'norm'))
    scl          =   varargin{find(strcmpi(varargin,'norm'))+1};
 end
@@ -151,6 +153,28 @@ if sum(strcmpi(varargin,'scale'))
    scl          =   varargin{find(strcmpi(varargin,'scale'))+1};
    md           =   1;
 end
+%
+if sum(strcmpi(varargin,'tail'))
+   tsstr        =   varargin{find(strcmpi(varargin,'tail'))+1};
+   if strcmpi(tsstr,'both')
+       warning('The test was designed two tailed to detect downspikes!')
+       tsflag       =  1; 
+       WhichVar     =  2; %IQR
+       WhichExpVal  =  3; %Z
+       testmeth     = 'Z';
+   else
+       tsflag=0;
+   end
+else
+   tsflag=0; 
+end
+
+% Add toolbox to open the images-------------------------------------------
+if isempty(strfind(path,'Nifti_Util'))
+    if verbose; disp('-Nifti_Util added to the path.'); end;
+    addpath(genpath('Nifti_Util'));
+end
+
 %--------------------------------------------------------------------------
 if ischar(V0)
     [ffpathstr,ffname,ffext]=fileparts(V0);
@@ -228,19 +252,32 @@ if gsrflag
 end
 %----------------------------------------^^ONLY FOR TEST-------------------
 
+
+%*************************************************************************
+%This part needs attention:
+%1) The test should be switched to Z-test in case of downspikes. 
+%2) Only IQRsd should be used in case of two tailed
+%3) CLEAN this section
+
 %funcs-----
 IQRsd   =   @(x) (quantile(x,0.75)-quantile(x,0.25))/1.349;
 H_IQRsd =   @(x) (quantile(x,0.5)-quantile(x,0.25))/1.349*2;
 %--
-Zstat   =   @(x,m,s) (x-m)/s;
+if tsflag
+    Zstat   =   @(x,m,s) abs((x-m)/s);
+else
+    Zstat   =   @(x,m,s) (x-m)/s;
+end
 Zp      =   @(x,m,s) 1-normcdf(Zstat(x,m,s));
 %--
 X2stat  =   @(x,m,s) 2*m/s^2*x;
 X2df    =   @(m,s)   2*m^2/s^2;
-X2p     =   @(x,m,s) chi2cdf(X2stat(x,m,s),X2df(m,s),'upper');
-%X2p     =   @(x,m,s) 1-chi2cdf(X2stat(x,m,s),X2df(m,s));
-
+%X2p    =   @(x,m,s) 1-chi2cdf(X2stat(x,m,s),X2df(m,s));
 X2p0    =   @(x,m,s) (X2stat(x,m,s)-X2df(m,s))/sqrt(2*X2df(m,s));
+X2p     =   @(x,m,s) chi2cdf(X2stat(x,m,s),X2df(m,s),'upper');
+
+
+%*************************************************************************
 %Relative DVARS--------------------------------------------------------
 DY    = diff(Y,1,2);
 DVARS = sqrt(sum(DY.^2)./I1);
@@ -330,14 +367,14 @@ Stat.pvals      = Pval;
 Stat.Zval       = Zval;
 
 Stat.Mu0        = mean(IQRsd(Y));
-Stat.Y_MS       = mean(mean(Y.^2)); % << This is A-var of DSEvar.m! 
+Stat.Avar       = mean(mean(Y.^2)); % << This is A-var of DSEvar.m! 
 
 %Standardised 
 Stat.RDVARS     = RelDVARS;
 Stat.SDVARS_X2  = NDVARS_X2;
 %Stat.SDVARS_X20 = NDVARS_X20;
 Stat.SDVARS_Z   = NDVARS_Z;
-Stat.DeltapDvar = (DVARS2-median(DVARS2))./(4*Stat.Y_MS)*100;
+Stat.DeltapDvar = (DVARS2-median(DVARS2))./(4*Stat.Avar)*100;
 %A similar measure, as DeltapDvar is estimated via DSE variance in DSEvar.m as:
 %   Stat.DeltapDvar = (V.Dvar_ts-median(V.Dvar_ts))/mean(V.Avar_ts)*100;
 
@@ -356,6 +393,7 @@ Stat.Config.WhichVar    =   VarNms{WhichVar};
 Stat.Config.gsrflag     =   gsrflag;
 Stat.Config.Median2Norm =   md;
 Stat.Config.Scale2Norm  =   scl;
+Stat.Config.VoxRmvd     =   [nan_idx;zeros_idx];
 
 function rmad = madicc(x,y)
 % Median Absolute Deviation Intraclass Correlation Coefficient
