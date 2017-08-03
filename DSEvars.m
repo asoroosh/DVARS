@@ -111,11 +111,6 @@ t3_rown = {'Whole','Global','non-Global'};
 Row_labs = {'Avar','Dvar','Svar','Evar','g_Avar','g_Dvar','g_Svar','g_Evar'};
 Col_labs = {'MS','RMS','Percentage_of_whole','Relative_to_iid'};
 
-% Add toolbox to open the images-------
-if isempty(strfind(path,'Nifti_Util'))
-    disp('-Nifti_Util added to the path.')
-    addpath(genpath('Nifti_Util'));
-end
 % Input Check-------------------------
 
 gsrflag=0; verbose=1; DestDir=[]; md=[]; scl=[];
@@ -134,6 +129,12 @@ end
 if sum(strcmpi(varargin,'scale'))
    scl          =   varargin{find(strcmpi(varargin,'scale'))+1};
    md           =   1;
+end
+
+% Add toolbox to open the images-------
+if isempty(strfind(path,'Nifti_Util'))
+    if verbose; disp('-Nifti_Util added to the path.'); end;
+    addpath(genpath('Nifti_Util'));
 end
 
 %---temp
