@@ -273,7 +273,7 @@ if ~isempty(DestDir) && ischar(V0)
         Var0_tmp      = eval(['V_Img.' is{1}]);
         Var1_tmp      = zeros(I0,size(Var0_tmp,2));
         Var1_tmp(idx) = Var0_tmp;
-        Y_tmp         = reshape(Var1_tmp,[X0 Y0 Z0]);
+        Y_tmp         = flipud(reshape(Var1_tmp,[X0 Y0 Z0])); %flip back here because save_nii flips it!
         nii_tmp       = make_nii(sum(Y_tmp,4),[2,2,2],[0,0,0],64,['3D image of ' is{1}]);
         save_nii(nii_tmp,[savedir is{1} '.nii.gz'])
         if verbose; disp([is{1} ' saved: ' savedir is{1} '.nii.gz']); end;
