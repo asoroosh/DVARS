@@ -122,6 +122,11 @@ if sum(strcmpi(varargin,'verbose'))
 end
 if sum(strcmpi(varargin,'destdir'))
    DestDir      =   varargin{find(strcmpi(varargin,'destdir'))+1};
+   if sum(strcmpi(varargin,'images'))
+      imagelist  =   varargin{find(strcmpi(varargin,'images'))+1}; 
+   else
+      imagelist  =   {'Dvar','Svar'};
+   end
 end
 if sum(strcmpi(varargin,'norm'))
    scl          =   varargin{find(strcmpi(varargin,'norm'))+1};
@@ -254,7 +259,7 @@ if ~isempty(DestDir) && ischar(V0)
     if exist(DestDir,'dir')~=7; mkdir(DestDir); end;
     
     savedir = [pwd '/' DestDir '/'];
-    for is=t3_varn
+    for is=imagelist
         if verbose; disp(['****' is{1} ':']); end;
         
         Var0_tmp        = eval(['V_Img.' is{1} '_ts']);
@@ -386,8 +391,7 @@ Stat.GrandMean_NormInt    = mean(mvY_NormInt);
 Stat.GrandMean_Demeaned   = mean(mvY_Demeaned); 
 
 function gsrY=fcn_GSR(Y)
-%Global Signal Regression
-%Inspired by FSLnets
+%Global Signal Regression. From FSLnets.
 %For the fMRIDiag, it needs to be transposed. 
 % SA, UoW, 2017
 
