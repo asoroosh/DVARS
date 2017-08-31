@@ -24,7 +24,11 @@ function [FDts,Stat]=FDCalc(MP,varargin)
 %           1) Rotation params should be in degree 
 %           2) Only first six params takes into account
 %
-%   SA, UoW, 2017
+%_________________________________________________________________________
+% Soroosh Afyouni, NISOx.org, 2017
+% srafyouni@gmail.com
+fnnf=mfilename; if ~nargin; help(fnnf); return; end; clear fnnf;
+%_________________________________________________________________________
 
 
 if isempty(varargin)
