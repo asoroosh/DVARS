@@ -2,8 +2,11 @@ function Y=ButterFilt(Y,Ord,bnd_freq,TR)
 % Butterworth filtering of the multi-dim data
 % Input Y should be in IxT form. 
 %
-% SA, NISOx.org, 2017
-%
+%_________________________________________________________________________
+% Soroosh Afyouni, NISOx.org, 2017
+% srafyouni@gmail.com
+fnnf=mfilename; if ~nargin; help(fnnf); return; end; clear fnnf;
+%_________________________________________________________________________
 
 % if size(Y,1)<size(Y,2)
 %     error('The diminsions should be as IxT.')

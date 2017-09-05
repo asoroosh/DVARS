@@ -1,5 +1,9 @@
 function [Y_ft,freq,Pxx]=Plot_fft(Y_t,L,TR,varargin)
-% SA, NISOx, 2017
+%_________________________________________________________________________
+% Soroosh Afyouni, NISOx.org, 2017
+% srafyouni@gmail.com
+fnnf=mfilename; if ~nargin; help(fnnf); return; end; clear fnnf;
+%_________________________________________________________________________
 
 lfts=12; %font size for labels
 

@@ -5,7 +5,11 @@ function [Y,Stat]=CleanNIFTI(V0,varargin)
 % Output Y is a IxT matrix
 % Trigger 'DestDir' with the destination to save the NIFTI file. 
 %
-% SA, NISOx.org, 2017
+%_________________________________________________________________________
+% Soroosh Afyouni, NISOx.org, 2017
+% srafyouni@gmail.com
+fnnf=mfilename; if ~nargin; help(fnnf); return; end; clear fnnf;
+%_________________________________________________________________________
 
 
 Steps=[]; verbose=1; DestDir=[]; md=[]; scl=[];
