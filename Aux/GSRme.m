@@ -1,9 +1,13 @@
-function gsrY=GSRme(Y)
+function gsrY=GSRme(Y,T)
 % Quick Global Signal Regression
 %
 % NOTE: Y should be a TxI matrix
 %
 % SA, Ox, 2018
+
+if size(Y,1)~=T
+    Y=Y'; %TxI
+end
 
 mY=mean(Y,2); 
 gsrY=Y-(mY*(pinv(mY)*Y));
