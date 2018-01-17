@@ -92,7 +92,9 @@ function [DVARS,Stat]=DVARSCalc(V0,varargin)
 %   http://warwick.ac.uk/tenichols
 %
 %   Please report bugs to srafyouni@gmail.com
-%
+%_________________________________________________________________________
+fnnf=mfilename; if ~nargin; help(fnnf); return; end; clear fnnf;
+%_________________________________________________________________________
 
 %External updates:
 % Brunno M. Campos <brunno@fcm.unicamp.br>: int 16bit to double

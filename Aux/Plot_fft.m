@@ -21,6 +21,8 @@ if size(Y_t,2)~=L
     Y_t=Y_t';
 end
 
+I = size(Y_t,1);
+
 Fs      = 1/TR;              %sampling frequency
 
 nfft    = 2^nextpow2(2*L-1);
@@ -40,8 +42,15 @@ freq = 0:Fs/L:Fs/2;
 % ylabel('|P1(f)|')
 
 %subplot(2,1,2)
+
+if I==1
+    clk='k';
+else
+    clk=[.5 .5 .5 .2];
+end
+
 hold on; box on; grid on;
-plot(freq,10*log10(Pxx),'color',[.5 .5 .5 .2]) 
+plot(freq,10*log10(Pxx),'color',clk) 
 plot(freq,mean(10*log10(Pxx)),'r-','linewidth',1.4)
 xlabel('Hz','fontsize',lfts,'interpreter','latex'); 
 ylabel('dB/Hz','fontsize',lfts,'interpreter','latex');

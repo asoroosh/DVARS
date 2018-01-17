@@ -1,8 +1,13 @@
-function gsrY=GSRme(ts)
+function gsrY=GSRme(Y)
+% Quick Global Signal Regression
+%
+% NOTE: Y should be a TxI matrix
+%
+% SA, Ox, 2018
 
-mgrot=mean(ts,2); 
-gsrY=ts-(mgrot*(pinv(mgrot)*ts));
+mY=mean(Y,2); 
+gsrY=Y-(mY*(pinv(mY)*Y));
 
-if size(gsrY,1)~=size(ts,1) || size(gsrY,2)~=size(ts,2)
+if size(gsrY,1)~=size(Y,1) || size(gsrY,2)~=size(Y,2)
     error('something is wrong!')
 end
