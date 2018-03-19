@@ -262,8 +262,8 @@ end
 %3) CLEAN this section
 
 %funcs-----
-IQRsd   =   @(x) (quantile(x,0.75)-quantile(x,0.25))/1.349;
-H_IQRsd =   @(x) (quantile(x,0.5)-quantile(x,0.25))/1.349*2;
+IQRsd   =   @(x) (quantile(x,0.75)-quantile(x,0.25))./1.349;
+H_IQRsd =   @(x) (quantile(x,0.5)-quantile(x,0.25))./1.349*2;
 %--
 if tsflag
     Zstat   =   @(x,m,s) abs((x-m)/s);
