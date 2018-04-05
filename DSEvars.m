@@ -129,6 +129,8 @@ if sum(strcmpi(varargin,'destdir'))
    else
       imagelist  =   {'Dvar','Svar'};
    end
+   %add something here to show the var images, just in case; with a verbose
+   %trigger, of course!
 end
 if sum(strcmpi(varargin,'norm'))
    scl          =   varargin{find(strcmpi(varargin,'norm'))+1};
@@ -239,7 +241,7 @@ B.Sbar  = sum(S)./I1;
 Ytail   = Y(:,end); Yhead=Y(:,1);
 B.Ytbar = sum(Ytail)./I1; 
 B.Y1bar = sum(Yhead)./I1;
-%% SED Var Images
+%% DSE Var Images
 %4D images
 V_Img.Avar_ts = Y.^2;
 V_Img.Dvar_ts = D.^2./4;
@@ -250,7 +252,7 @@ V_Img.Avar = mean(Y.^2,2);
 V_Img.Dvar = mean(D.^2,2)./2;
 V_Img.Svar = mean(S.^2,2)./2;
 V_Img.Evar = mean([Yhead.^2,Ytail.^2],2); % <<<< should be checked
-%% SED Time series -- averaged across I
+%% DSE Time series -- averaged across I
 V.Avar_ts = mean(V_Img.Avar_ts);
 V.Dvar_ts = mean(V_Img.Dvar_ts);
 V.Svar_ts = mean(V_Img.Svar_ts);
@@ -260,7 +262,7 @@ if ~isempty(DestDir) && ischar(V0)
     %if ~any(strfind(path,'spm')); warning('**SPM has not been added to the path!**'); end;
     if exist(DestDir,'dir')~=7; mkdir(DestDir); end;
     
-    savedir = [pwd '/' DestDir '/'];
+    %savedir = [pwd '/' DestDir '/']; 
     for is=imagelist
         if verbose; disp(['****' is{1} ':']); end;
         
@@ -273,8 +275,8 @@ if ~isempty(DestDir) && ischar(V0)
         V_tmp                   = V1;
         V_tmp.hdr.dime.dim(2:5) = [X0 Y0 Z0 size(Var1_tmp,2)];
         V_tmp.img               = Y_tmp;
-        save_untouch_nii(V_tmp,[savedir is{1} '_ts.nii.gz']);
-        if verbose; disp([is{1} ' saved: ' savedir is{1} '_ts.nii.gz']); end; 
+        save_untouch_nii(V_tmp,[DestDir is{1} '_ts.nii.gz']);
+        if verbose; disp([is{1} ' saved: ' DestDir is{1} '_ts.nii.gz']); end; 
         clear *_tmp
         
         Var0_tmp      = eval(['V_Img.' is{1}]);
@@ -282,8 +284,8 @@ if ~isempty(DestDir) && ischar(V0)
         Var1_tmp(idx) = Var0_tmp;
         Y_tmp         = flipud(reshape(Var1_tmp,[X0 Y0 Z0])); %flip back here because save_nii flips it!
         nii_tmp       = make_nii(sum(Y_tmp,4),[2,2,2],[0,0,0],64,['3D image of ' is{1}]);
-        save_nii(nii_tmp,[savedir is{1} '.nii.gz'])
-        if verbose; disp([is{1} ' saved: ' savedir is{1} '.nii.gz']); end;
+        save_nii(nii_tmp,[DestDir is{1} '.nii.gz'])
+        if verbose; disp([is{1} ' saved: ' DestDir is{1} '.nii.gz']); end;
         clear *_tmp
     end
     clear V_Img;

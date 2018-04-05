@@ -40,10 +40,17 @@ elseif isempty(scl) && isempty(md)
 else
     error('IntnstyScl :: Something is wrong with param re intensity normalisation')
 end
+
 %Centre the data-----------------------------------------------------------
 mvY     =    mean(Y,2);
 %size(mvY)
 dmeaner =    repmat(mvY,[1,size(Y,2)]);
 Y       =    Y-dmeaner; clear dmeaner
+
+%Demean the regressors
+mvrgsrs     =    mean(rgsrs);
+%size(mvY)
+dmeaner =    repmat(mvrgsrs,[size(mvrgsrs,1),1]);
+rgsrs       =    rgsrs-dmeaner; clear dmeaner
 %--------------------------------------------------------------------------
 dv_Y=Y'-(rgsrs*(pinv(rgsrs)*Y'));
