@@ -381,12 +381,15 @@ Stat.RelVar     = RelVar;
 Stat.VT         = Var_Tab;
 
 %Config
-Stat.dim        = [I1 T0];
-Stat.dim0       = [I0 T0];
+Stat.dim        = [I1 T0]; %Inter Cranial sizes
+Stat.dim0       = [I0 T0]; %the 4D image initial dimensions
 
-%Standardised DVARS
-Stat.DeltapDvar    = (V.Dvar_ts-median(V.Dvar_ts))/mean(V.Avar_ts)*100; %< This is \Delta\%D-var
-Stat.pDvar          =  V.Dvar_ts./mean(V.Avar_ts)*100; %< & this is \%D-var
+%Standardised measures
+Stat.DeltapDvar     = (V.Dvar_ts-median(V.Dvar_ts))/mean(V.Avar_ts)*100; % This is \Delta\%D-var i.e. How much it exceeded from it is *median* normalised by A-var. 
+Stat.DeltapSvar     = (V.Svar_ts-median(V.Svar_ts))/mean(V.Avar_ts)*100; % This is \Delta\%S-var i.e. How much it exceeded from it is *median* normalised by A-var. 
+
+Stat.pDvar          =  V.Dvar_ts./mean(V.Avar_ts)*100; % & this is \%D-var. NB! *_ts is sum across *voxels*, I in nominator and denominator cancel out. 
+Stat.pSvar          =  V.Svar_ts./mean(V.Avar_ts)*100; % & this is \%S-var
 
 %Mean -- 4 sanity checks
 Stat.GranMean_WholeBrain  = mean(mvY_WholeImage);
