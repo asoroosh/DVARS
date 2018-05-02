@@ -14,6 +14,9 @@ function [V,Stat]=DSEvars(V0,varargin)
 %                   S, D and E (3D and 4D) images. 
 %                   e.g.: [V,Stat]=DSEvars(V0,'DestDir','~/Where/to/save/')
 %
+%   'saveDSEtable': If triggered and followed by a path + filename.csv it
+%                   saves the DSE table as a csv file
+%
 %   'Norm'        : Intensity normalisation to a given scale.
 %                   e.g.: [V,Stat]=DSEvars(V0,'Norm',100)
 %
@@ -23,7 +26,6 @@ function [V,Stat]=DSEvars(V0,varargin)
 %   'verbose'     : Set to 1 if you need the log of runing code 
 %                   [default:1]
 %                   e.g.: [V,Stat]=DSEvars(V0,'verbose',1)
-%
 %%%OUTPUTS:
 %
 %   V:       Structure contains the variance components:
@@ -42,6 +44,8 @@ function [V,Stat]=DSEvars(V0,varargin)
 %
 %               Stat.DeltapDvar: \Delta\%D-var
 %               Stat.pDvar:      \%D-var
+%               Stat.DeltapSvar: \Delta\%S-var
+%               Stat.pSvar:      \%S-var
 %
 %
 %%%NOTES:
@@ -115,13 +119,18 @@ Col_labs = {'MS','RMS','Percentage_of_whole','Relative_to_iid'};
 
 % Input Check-------------------------
 
-gsrflag=0; verbose=1; DestDir=[]; md=[]; scl=[];
+gsrflag=0; verbose=1; DestDir=[]; DestDirTable=[]; md=[]; scl=[];
 if sum(strcmpi(varargin,'gsrflag'))
    gsrflag      =   varargin{find(strcmpi(varargin,'gsrflag'))+1};
 end
 if sum(strcmpi(varargin,'verbose'))
    verbose      =   varargin{find(strcmpi(varargin,'verbose'))+1};
 end
+
+if sum(strcmpi(varargin,'saveDSEtable'))
+   DestDirTable      =   varargin{find(strcmpi(varargin,'saveDSEtable'))+1};
+end
+
 if sum(strcmpi(varargin,'destdir'))
    DestDir      =   varargin{find(strcmpi(varargin,'destdir'))+1};
    if sum(strcmpi(varargin,'images'))
@@ -362,12 +371,18 @@ Var_Tab = [V.w_Avar,V.w_Dvar,V.w_Svar,V.w_Evar;...
     V.g_Avar,V.g_Dvar,V.g_Svar,V.g_Evar;...
     V.ng_Avar,V.ng_Dvar,V.ng_Svar,V.ng_Evar];
 
+DSETable = array2table([MS',RMS',Prntg',RelVar'],'VariableNames',Col_labs,'RowNames',Row_labs);
+
+if ~isempty(DestDirTable)
+   writetable(DSETable,DestDirTable) 
+end
+
 if verbose
     disp('----------------------')
     disp('Sum-of-Mean-Squared (SMS) Table')
     disp(array2table(fix(Var_Tab),'VariableNames',t3_varn,'RowNames',t3_rown))
     disp('------------')
-    disp(array2table([MS',RMS',Prntg',RelVar'],'VariableNames',Col_labs,'RowNames',Row_labs))
+    disp(DSETable)
     disp('----------------------')
 end    
 
