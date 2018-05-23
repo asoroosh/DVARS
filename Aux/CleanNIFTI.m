@@ -87,9 +87,11 @@ idx        = 1:I0;
 idx([nan_idx;zeros_idx]) = [];
 Y([nan_idx;zeros_idx],:) = [];
 I1 = size(Y,1); %update number of voxels
+
 if verbose; disp(['-Extra-cranial areas removed: ' num2str(size(Y,1)) 'x' num2str(size(Y,2))]); end;
 Steps=[Steps 'CLEANED_'];
 
+Stat.GlobalMeanSignal = mean(Y);
 Stat.OrigDim     = [I0 T0];
 Stat.CleanedDim  = [I1 T0];
 Stat.Removables  = [nan_idx;zeros_idx];
