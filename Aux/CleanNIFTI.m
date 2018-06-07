@@ -58,7 +58,8 @@ if ischar(V0)
     elseif ~contains(ffname,'.dtseries') || contains(ffname,'.nii') 
         if verbose; disp(['--File is NIFTI: ' ffname ffext]); end;
         V1 = load_untouch_nii(V0);
-        V2 = V1.img; V1.img = [];
+        V2 = V1.img; 
+        V1.img = [];
         X0 = size(V2,1); Y0 = size(V2,2); Z0 = size(V2,3); T0 = size(V2,4);
         I0 = prod([X0,Y0,Z0]);
         Y  = reshape(V2,[I0,T0]); clear V2;
@@ -76,8 +77,7 @@ elseif isnumeric(V0) && size(V0,1)<=size(V0,2)
     error('Check the input, matrix should be in form of IxT, where I=XxYxZ!');    
 end
 
-
-Y = double(Y);%to work with int 16bit as well.
+%Y = double(Y);%to work with int 16bit as well.
 
 %------------------------------------------------------------------------
 %Remove voxels of zeros/NaNs---------------------------------------------------
@@ -98,7 +98,7 @@ Stat.Removables  = [nan_idx;zeros_idx];
 OrigMean = mean(Y,2);
 Stat.OrigMean    = OrigMean;
 Stat.ImgDim = [X0 Y0 Z0 T0];
-Stat.Obj = V1;
+%Stat.Obj = V1;
 %------------------------------------------------------------------------
 % Intensity Normalisation------------------------------------------------------
 IntnstyScl = @(Y,md,scl) (Y./md).*scl; 
