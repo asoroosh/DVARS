@@ -186,10 +186,10 @@ if ischar(V0)
     
     if verbose; disp('-Image loaded.'); end;
 elseif isnumeric(V0) %&& size(V0,1)>size(V0,2)
+    if verbose; disp('-Input is a Matrix.'); end;
     if size(V0,1)<=size(V0,2)
         warning('Check the input, matrix should be in form of IxT, where I=XxYxZ!');  
     end
-    if verbose; disp('-Input is a Matrix.'); end;
     Y = double(V0);  
     I0= size(Y,1); T0 = size(Y,2);
 %elseif isnumeric(V0) && size(V0,1)<=size(V0,2)
