@@ -76,9 +76,16 @@ if (( $# < 2 )) ; then
 fi
 
 FUNC="$1"
-#BND1="$2"
-#BND2="$3"
 OUT="$2"
+
+if [ -z "$3" ]; 
+then 
+	echo "4D flag is unset so 4D images will be saved..."
+	need4D=1 
+else 
+	need4D="$3"
+	echo "4D flag is set to '$need4D' so 4D images will not be saved." 
+fi
 
 #Create a new directory, if doesn't already exists, as variable OUT
 Dir2Save=`dirname "$OUT"`
@@ -92,8 +99,6 @@ echo "Created: $Dir2Save"
 # Script Body
 #
 ###############################################################################
-#echo -n "."
-
 Nvol=$(fslnvols "$FUNC")
 echo "The input image has $Nvol volumes."
 
@@ -130,6 +135,13 @@ fslmeants -i $Dir2Save/$PreFix-Dvar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-Dvar-
 echo "Generating Svar and Dvar 3D images..."
 fslmaths $Dir2Save/$PreFix-Svar -Tmean $Dir2Save/$PreFix-mSvar
 fslmaths $Dir2Save/$PreFix-Dvar -Tmean $Dir2Save/$PreFix-mDvar
+
+if [ need4D == 0 ]
+then
+        rm $Dir2Save/$PreFix-Dvar
+        rm $Dir2Save/$PreFix-Svar
+        rm $Dir2Save/$PreFix-Avar
+fi
 
 echo "Done!"
 ###############################################################################
