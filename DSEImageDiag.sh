@@ -97,13 +97,12 @@ echo "Created: $Dir2Save"
 Nvol=$(fslnvols "$FUNC")
 echo "The input image has $Nvol volumes."
 
-
 # Find mean over time
 fslmaths "$FUNC" -Tmean $Tmp-Mean
 echo $Tmp-Mean
 
-# Find the brain
-#bet $Tmp-Mean  $Tmp-MeanBrain
+# Form a mask, later will be used to get the Dvar and Svar time series
+fslmaths $Tmp-Mean -bin $Tmp-Mean-mask 
 
 # Demean
 #fslmaths "$FUNC" -sub $Tmp-Mean -mas $Tmp-MeanBrain $Tmp-Demean
@@ -112,26 +111,27 @@ fslmaths "$FUNC" -sub $Tmp-Mean $Tmp-Demean
 #std
 fslmaths $Tmp-Demean -Tstd $Dir2Save/$PreFix-DemeanStd
 
-#BNDR=$(($BND2 - $BND1))
-#echo "Designated bounds are length of : ${BNDR}"
-#echo "  From ${BND1} to ${BND2}"
-
 fslroi $Tmp-Demean $Tmp-BND0  0     $((Nvol - 1))
 fslroi $Tmp-Demean $Tmp-BND1  1     "$Nvol"
 
-fslinfo $Tmp-BND0
-fslinfo $Tmp-BND1
+#Sanity check
+#fslinfo $Tmp-BND0
+#fslinfo $Tmp-BND1
 
 echo "Generating Svar and Dvar 4D data..."
-fslmaths $Tmp-BND0 -add $Tmp-BND1 -div 2 -sqr $Dir2Save/$PreFix-Svar
-fslmaths $Tmp-BND0 -sub $Tmp-BND1 -div 2 -sqr $Dir2Save/$PreFix-Dvar
+fslmaths $Tmp-Demean -sqr $Dir2Save/$PreFix-Avar
+fslmaths $Tmp-BND0   -add $Tmp-BND1 -div 2 -sqr $Dir2Save/$PreFix-Svar
+fslmaths $Tmp-BND0   -sub $Tmp-BND1 -div 2 -sqr $Dir2Save/$PreFix-Dvar
+
+fslmeants -i $Dir2Save/$PreFix-Avar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-Avar-meants.txt
+fslmeants -i $Dir2Save/$PreFix-Svar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-Svar-meants.txt
+fslmeants -i $Dir2Save/$PreFix-Dvar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-Dvar-meants.txt
 
 echo "Generating Svar and Dvar 3D images..."
 fslmaths $Dir2Save/$PreFix-Svar -Tmean $Dir2Save/$PreFix-mSvar
 fslmaths $Dir2Save/$PreFix-Dvar -Tmean $Dir2Save/$PreFix-mDvar
 
 echo "Done!"
-
 ###############################################################################
 #
 # Exit & Clean up
