@@ -104,7 +104,10 @@ fi
 Dir2Save=`dirname "$OUT"`
 PreFix=`basename "$OUT"`
 
-mkdir -p $Dir2Save
+mkdir -p $Dir2Save/DSE
+mkdir -p $Dir2Save/pDSE
+mkdir -p $Dir2Save/DeltapDSE
+
 echo "Created: $Dir2Save"
 
 ###############################################################################
@@ -137,65 +140,65 @@ fslroi $Tmp-Demean $Tmp-BND1  1     "$Nvol"
 #fslinfo $Tmp-BND1
 
 echo "Generating Avar, Svar and Dvar 4D data + non-normalised time series."
-fslmaths $Tmp-Demean -sqr $Dir2Save/$PreFix-Avar
-fslmaths $Tmp-BND0   -add $Tmp-BND1 -div 2 -sqr $Dir2Save/$PreFix-Svar
-fslmaths $Tmp-BND0   -sub $Tmp-BND1 -div 2 -sqr $Dir2Save/$PreFix-Dvar
+fslmaths $Tmp-Demean -sqr $Dir2Save/DSE/$PreFix-Avar
+fslmaths $Tmp-BND0   -add $Tmp-BND1 -div 2 -sqr $Dir2Save/DSE/$PreFix-Svar
+fslmaths $Tmp-BND0   -sub $Tmp-BND1 -div 2 -sqr $Dir2Save/DSE/$PreFix-Dvar
 
-fslmeants -i $Dir2Save/$PreFix-Avar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-Avar-meants.txt
-fslmeants -i $Dir2Save/$PreFix-Svar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-Svar-meants.txt
-fslmeants -i $Dir2Save/$PreFix-Dvar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-Dvar-meants.txt
+fslmeants -i $Dir2Save/DSE/$PreFix-Avar -m $Tmp-Mean-mask -o $Dir2Save/DSE/$PreFix-Avar-meants.txt
+fslmeants -i $Dir2Save/DSE/$PreFix-Svar -m $Tmp-Mean-mask -o $Dir2Save/DSE/$PreFix-Svar-meants.txt
+fslmeants -i $Dir2Save/DSE/$PreFix-Dvar -m $Tmp-Mean-mask -o $Dir2Save/DSE/$PreFix-Dvar-meants.txt
 
-awk '{ total += $1; count++ } END { print total/count }' $Dir2Save/$PreFix-Avar-meants.txt >  $Dir2Save/$PreFix-Whole-DSE.txt
-awk '{ total += $1; count++ } END { print total/count }' $Dir2Save/$PreFix-Svar-meants.txt >> $Dir2Save/$PreFix-Whole-DSE.txt
-awk '{ total += $1; count++ } END { print total/count }' $Dir2Save/$PreFix-Dvar-meants.txt >> $Dir2Save/$PreFix-Whole-DSE.txt
+awk '{ total += $1; count++ } END { print total/count }' $Dir2Save/DSE/$PreFix-Avar-meants.txt >  $Dir2Save/DSE/$PreFix-Whole-DSE.txt
+awk '{ total += $1; count++ } END { print total/count }' $Dir2Save/DSE/$PreFix-Svar-meants.txt >> $Dir2Save/DSE/$PreFix-Whole-DSE.txt
+awk '{ total += $1; count++ } END { print total/count }' $Dir2Save/DSE/$PreFix-Dvar-meants.txt >> $Dir2Save/DSE/$PreFix-Whole-DSE.txt
 
 echo "Generating Avar 3D image..."
-fslmaths $Dir2Save/$PreFix-Avar -Tmean $Dir2Save/$PreFix-mAvar
+fslmaths $Dir2Save/DSE/$PreFix-Avar -Tmean $Dir2Save/DSE/$PreFix-mAvar
 
 #Generate the median images for calculating the DeltapDvar and DeltapSvar...
-fslmaths $Dir2Save/$PreFix-Svar -Tmedian $Dir2Save/$PreFix-mdSvar
-fslmaths $Dir2Save/$PreFix-Dvar -Tmedian $Dir2Save/$PreFix-mdDvar
+fslmaths $Dir2Save/DSE/$PreFix-Svar -Tmedian $Dir2Save/$PreFix-mdSvar
+fslmaths $Dir2Save/DSE/$PreFix-Dvar -Tmedian $Dir2Save/$PreFix-mdDvar
 
 echo "Generating %Svar and %Dvar 4D images..."
 #Normalise Dvar and Svar by Avar i.e. %Svar and %Dvar
-fslmaths $Dir2Save/$PreFix-Svar -div $Dir2Save/$PreFix-mAvar $Dir2Save/$PreFix-pSvar
-fslmaths $Dir2Save/$PreFix-Dvar -div $Dir2Save/$PreFix-mAvar $Dir2Save/$PreFix-pDvar
+fslmaths $Dir2Save/DSE/$PreFix-Svar -div $Dir2Save/DSE/$PreFix-mAvar $Dir2Save/pDSE/$PreFix-pSvar
+fslmaths $Dir2Save/DSE/$PreFix-Dvar -div $Dir2Save/DSE/$PreFix-mAvar $Dir2Save/pDSE/$PreFix-pDvar
 
 echo "Generating Delta%Svar and Delta%Dvar 4D images..."
-fslmaths $Dir2Save/$PreFix-Svar -sub $Dir2Save/$PreFix-mdSvar -div $Dir2Save/$PreFix-mAvar $Dir2Save/$PreFix-DeltapSvar
-fslmaths $Dir2Save/$PreFix-Dvar -sub $Dir2Save/$PreFix-mdDvar -div $Dir2Save/$PreFix-mAvar $Dir2Save/$PreFix-DeltapDvar
+fslmaths $Dir2Save/DSE/$PreFix-Svar -sub $Dir2Save/$PreFix-mdSvar -div $Dir2Save/DSE/$PreFix-mAvar $Dir2Save/DeltapDSE/$PreFix-DeltapSvar
+fslmaths $Dir2Save/DSE/$PreFix-Dvar -sub $Dir2Save/$PreFix-mdDvar -div $Dir2Save/DSE/$PreFix-mAvar $Dir2Save/DeltapDSE/$PreFix-DeltapDvar
 
 #remove the median images
 rm $Dir2Save/$PreFix-mdSvar.nii.gz $Dir2Save/$PreFix-mdDvar.nii.gz
 
 echo "Generating %Svar and %Dvar time series..."
-fslmeants -i $Dir2Save/$PreFix-pSvar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-pSvar-meants.txt
-fslmeants -i $Dir2Save/$PreFix-pDvar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-pDvar-meants.txt
+fslmeants -i $Dir2Save/pDSE/$PreFix-pSvar -m $Tmp-Mean-mask -o $Dir2Save/pDSE/$PreFix-pSvar-meants.txt
+fslmeants -i $Dir2Save/pDSE/$PreFix-pDvar -m $Tmp-Mean-mask -o $Dir2Save/pDSE/$PreFix-pDvar-meants.txt
 
-awk '{ total += $1; count++ } END { print total/count }' $Dir2Save/$PreFix-pSvar-meants.txt >  $Dir2Save/$PreFix-Whole-p-DSE.txt
-awk '{ total += $1; count++ } END { print total/count }' $Dir2Save/$PreFix-pDvar-meants.txt >> $Dir2Save/$PreFix-Whole-p-DSE.txt
+awk '{ total += $1; count++ } END { print total/count }' $Dir2Save/pDSE/$PreFix-pSvar-meants.txt >  $Dir2Save/pDSE/$PreFix-Whole-p-DSE.txt
+awk '{ total += $1; count++ } END { print total/count }' $Dir2Save/pDSE/$PreFix-pDvar-meants.txt >> $Dir2Save/pDSE/$PreFix-Whole-p-DSE.txt
 
 echo "Generating Delta%Svar and Delta%Dvar time series..."
-fslmeants -i $Dir2Save/$PreFix-DeltapSvar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-DeltapSvar-meants.txt
-fslmeants -i $Dir2Save/$PreFix-DeltapDvar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-DeltapDvar-meants.txt
+fslmeants -i $Dir2Save/DeltapDSE/$PreFix-DeltapSvar -m $Tmp-Mean-mask -o $Dir2Save/DeltapDSE/$PreFix-DeltapSvar-meants.txt
+fslmeants -i $Dir2Save/DeltapDSE/$PreFix-DeltapDvar -m $Tmp-Mean-mask -o $Dir2Save/DeltapDSE/$PreFix-DeltapDvar-meants.txt
 
 echo "Generating %Svar and %Dvar 3D images..."
-fslmaths $Dir2Save/$PreFix-pSvar -Tmean $Dir2Save/$PreFix-mpSvar
-fslmaths $Dir2Save/$PreFix-pDvar -Tmean $Dir2Save/$PreFix-mpDvar
+fslmaths $Dir2Save/pDSE/$PreFix-pSvar -Tmean $Dir2Save/pDSE/$PreFix-mpSvar
+fslmaths $Dir2Save/pDSE/$PreFix-pDvar -Tmean $Dir2Save/pDSE/$PreFix-mpDvar
 
 echo "Generating Delta%Svar and Delta%Dvar 3D images..."
-fslmaths $Dir2Save/$PreFix-DeltapSvar -Tmean $Dir2Save/$PreFix-mDeltapSvar
-fslmaths $Dir2Save/$PreFix-DeltapDvar -Tmean $Dir2Save/$PreFix-mDeltapDvar
+fslmaths $Dir2Save/DeltapDSE/$PreFix-DeltapSvar -Tmean $Dir2Save/DeltapDSE/$PreFix-mDeltapSvar
+fslmaths $Dir2Save/DeltapDSE/$PreFix-DeltapDvar -Tmean $Dir2Save/DeltapDSE/$PreFix-mDeltapDvar
 
 if [ $need4D == 0 ]
 then
-	echo "Now deleting 4D images to free up space..."
+	echo "Now deleting 4D images to free up some space..."
         # remove the raw Svar and Dvar
-        rm $Dir2Save/$PreFix-Dvar.nii.gz $Dir2Save/$PreFix-Svar.nii.gz $Dir2Save/$PreFix-Avar.nii.gz
+        rm $Dir2Save/DSE/$PreFix-Dvar.nii.gz $Dir2Save/DSE/$PreFix-Svar.nii.gz $Dir2Save/DSE/$PreFix-Avar.nii.gz
         # remove the pSvar and pDvar images
-	    rm $Dir2Save/$PreFix-pDvar.nii.gz $Dir2Save/$PreFix-pSvar.nii.gz
+	    rm $Dir2Save/pDSE/$PreFix-pDvar.nii.gz $Dir2Save/pDSE/$PreFix-pSvar.nii.gz
         # remove DeltapSvar and DeltapDvar
-        rm $Dir2Save/$PreFix-DeltapDvar.nii.gz $Dir2Save/$PreFix-DeltapSvar.nii.gz
+        rm $Dir2Save/DeltapDSE/$PreFix-DeltapDvar.nii.gz $Dir2Save/DeltapDSE/$PreFix-DeltapSvar.nii.gz
 fi
 
 echo "Done!"
