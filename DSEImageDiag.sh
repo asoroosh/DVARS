@@ -30,14 +30,27 @@ export FSLOUTPUTTYPE="NIFTI_GZ"
 
 Usage() {
 cat <<EOF
-Usage: `basename $0` [options] fMRI_4Dtimeseries BND1 BND2 DVARSout
-INPUTS:
+Usage: `basename $0` [options] fMRI_4Dtimeseries OUT 4DFlag
+==INPUTS:
 fMRI_4Dtimeseries : 4D Resting-state image
-BND1              : Upper bound where the Svar should start from
-BND2              : Lowe bound where the Svar image should stop
-DVARSout          : Name and directory for the output image (Svar image) 
+OUT               : Directory and a prefix for the outputs, e.g. path/to/dir/SUB001
+4DFlag [optional] : if set to 1, both 3D and 4D variability images are saved, if set to 0 then only 3D images are saved [default 1]. 
 
-SA & TEN, UoW, 2017
+==OUTPUTS:
+    4D images:
+        Svar, Dvar & Avar. pSvar & pDvar. DeltapDvar & DeltapSvar
+    3D images:
+        Svar, Dvar & Avar. pSvar & pDvar. DeltapDvar & DeltapSvar
+    TXT:
+        mean Svar, mean Dvar & mean Avar. mean pSvar & mean pDvar. mean DeltapSvar & mean DeltapDvar
+
+==DEPENDENCIES:
+FSL should have been already installed. 
+
+==REFERENCE:
+Afyouni, Soroosh, and Thomas E. Nichols. "Insight and Inference for DVARS." NeuroImage (2018).
+
+SA & TEN, Ox, 2018
 _________________________________________________________________________
 \$Id$
 EOF
@@ -135,33 +148,47 @@ fslmeants -i $Dir2Save/$PreFix-Dvar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-Dvar-
 echo "Generating Avar 3D image..."
 fslmaths $Dir2Save/$PreFix-Avar -Tmean $Dir2Save/$PreFix-mAvar
 
+#Generate the median images for calculating the DeltapDvar and DeltapSvar...
+fslmaths $Dir2Save/$PreFix-Svar -Tmedian $Dir2Save/$PreFix-mdSvar
+fslmaths $Dir2Save/$PreFix-Dvar -Tmedian $Dir2Save/$PreFix-mdDvar
+
 echo "Generating %Svar and %Dvar 4D images..."
 #Normalise Dvar and Svar by Avar i.e. %Svar and %Dvar
 fslmaths $Dir2Save/$PreFix-Svar -div $Dir2Save/$PreFix-mAvar $Dir2Save/$PreFix-pSvar
 fslmaths $Dir2Save/$PreFix-Dvar -div $Dir2Save/$PreFix-mAvar $Dir2Save/$PreFix-pDvar
 
+echo "Generating Delta%Svar and Delta%Dvar 4D images..."
+fslmaths $Dir2Save/$PreFix-Svar -sub $Dir2Save/$PreFix-mdSvar -div $Dir2Save/$PreFix-mAvar $Dir2Save/$PreFix-DeltapSvar
+fslmaths $Dir2Save/$PreFix-Dvar -sub $Dir2Save/$PreFix-mdDvar -div $Dir2Save/$PreFix-mAvar $Dir2Save/$PreFix-DeltapDvar
+
+#remove the median images
+rm $Dir2Save/$PreFix-mdSvar.nii.gz $Dir2Save/$PreFix-mdDvar.nii.gz
+
 echo "Generating %Svar and %Dvar time series..."
 fslmeants -i $Dir2Save/$PreFix-pSvar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-pSvar-meants.txt
 fslmeants -i $Dir2Save/$PreFix-pDvar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-pDvar-meants.txt
+
+echo "Generating Delta%Svar and Delta%Dvar time series..."
+fslmeants -i $Dir2Save/$PreFix-DeltapSvar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-DeltapSvar-meants.txt
+fslmeants -i $Dir2Save/$PreFix-DeltapDvar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-DeltapDvar-meants.txt
 
 echo "Generating %Svar and %Dvar 3D images..."
 fslmaths $Dir2Save/$PreFix-pSvar -Tmean $Dir2Save/$PreFix-mpSvar
 fslmaths $Dir2Save/$PreFix-pDvar -Tmean $Dir2Save/$PreFix-mpDvar
 
+echo "Generating Delta%Svar and Delta%Dvar 3D images..."
+fslmaths $Dir2Save/$PreFix-DeltapSvar -Tmean $Dir2Save/$PreFix-mDeltapSvar
+fslmaths $Dir2Save/$PreFix-DeltapDvar -Tmean $Dir2Save/$PreFix-mDeltapDvar
+
 if [ $need4D == 0 ]
 then
 	echo "Now deleting 4D images to free up space..."
-
-        rm $Dir2Save/$PreFix-Dvar.nii.gz
-        rm $Dir2Save/$PreFix-Svar.nii.gz
-        rm $Dir2Save/$PreFix-Avar.nii.gz
-
-	    rm $Dir2Save/$PreFix-pDvar.nii.gz
-        rm $Dir2Save/$PreFix-pSvar.nii.gz
-
-        echo "$Dir2Save/$PreFix-Avar.nii.gz has been deleted."
-        echo "$Dir2Save/$PreFix-Svar.nii.gz has been deleted."
-        echo "$Dir2Save/$PreFix-Dvar.nii.gz has been deleted."
+        # remove the raw Svar and Dvar
+        rm $Dir2Save/$PreFix-Dvar.nii.gz $Dir2Save/$PreFix-Svar.nii.gz $Dir2Save/$PreFix-Avar.nii.gz
+        # remove the pSvar and pDvar images
+	    rm $Dir2Save/$PreFix-pDvar.nii.gz $Dir2Save/$PreFix-pSvar.nii.gz
+        # remove DeltapSvar and DeltapDvar
+        rm $Dir2Save/$PreFix-DeltapDvar.nii.gz $Dir2Save/$PreFix-DeltapSvar.nii.gz
 fi
 
 echo "Done!"
