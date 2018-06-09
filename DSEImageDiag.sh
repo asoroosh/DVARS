@@ -138,9 +138,13 @@ fslmaths $Dir2Save/$PreFix-Dvar -Tmean $Dir2Save/$PreFix-mDvar
 
 if [ need4D == 0 ]
 then
-        rm $Dir2Save/$PreFix-Dvar
-        rm $Dir2Save/$PreFix-Svar
-        rm $Dir2Save/$PreFix-Avar
+        rm $Dir2Save/$PreFix-Dvar.nii.gz
+        rm $Dir2Save/$PreFix-Svar.nii.gz
+        rm $Dir2Save/$PreFix-Avar.nii.gz
+
+        echo "$Dir2Save/$PreFix-Avar.nii.gz has been deleted."
+        echo "$Dir2Save/$PreFix-Svar.nii.gz has been deleted."
+        echo "$Dir2Save/$PreFix-Dvar.nii.gz has been deleted."
 fi
 
 echo "Done!"
