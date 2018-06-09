@@ -123,7 +123,7 @@ fslroi $Tmp-Demean $Tmp-BND1  1     "$Nvol"
 #fslinfo $Tmp-BND0
 #fslinfo $Tmp-BND1
 
-echo "Generating Svar and Dvar 4D data..."
+echo "Generating Avar, Svar and Dvar 4D data + non-normalised time series."
 fslmaths $Tmp-Demean -sqr $Dir2Save/$PreFix-Avar
 fslmaths $Tmp-BND0   -add $Tmp-BND1 -div 2 -sqr $Dir2Save/$PreFix-Svar
 fslmaths $Tmp-BND0   -sub $Tmp-BND1 -div 2 -sqr $Dir2Save/$PreFix-Dvar
@@ -132,9 +132,21 @@ fslmeants -i $Dir2Save/$PreFix-Avar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-Avar-
 fslmeants -i $Dir2Save/$PreFix-Svar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-Svar-meants.txt
 fslmeants -i $Dir2Save/$PreFix-Dvar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-Dvar-meants.txt
 
-echo "Generating Svar and Dvar 3D images..."
-fslmaths $Dir2Save/$PreFix-Svar -Tmean $Dir2Save/$PreFix-mSvar
-fslmaths $Dir2Save/$PreFix-Dvar -Tmean $Dir2Save/$PreFix-mDvar
+echo "Generating Avar 3D image..."
+fslmaths $Dir2Save/$PreFix-Avar -Tmean $Dir2Save/$PreFix-mAvar
+
+echo "Generating %Svar and %Dvar 4D images..."
+#Normalise Dvar and Svar by Avar i.e. %Svar and %Dvar
+fslmaths $Dir2Save/$PreFix-Svar -div $Dir2Save/$PreFix-mAvar $Dir2Save/$PreFix-pSvar
+fslmaths $Dir2Save/$PreFix-Dvar -div $Dir2Save/$PreFix-mAvar $Dir2Save/$PreFix-pDvar
+
+echo "Generating %Svar and %Dvar time series..."
+fslmeants -i $Dir2Save/$PreFix-pSvar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-pSvar-meants.txt
+fslmeants -i $Dir2Save/$PreFix-pDvar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-pDvar-meants.txt
+
+echo "Generating %Svar and %Dvar 3D images..."
+fslmaths $Dir2Save/$PreFix-pSvar -Tmean $Dir2Save/$PreFix-mpSvar
+fslmaths $Dir2Save/$PreFix-pDvar -Tmean $Dir2Save/$PreFix-mpDvar
 
 if [ $need4D == 0 ]
 then
@@ -143,6 +155,9 @@ then
         rm $Dir2Save/$PreFix-Dvar.nii.gz
         rm $Dir2Save/$PreFix-Svar.nii.gz
         rm $Dir2Save/$PreFix-Avar.nii.gz
+
+	    rm $Dir2Save/$PreFix-pDvar.nii.gz
+        rm $Dir2Save/$PreFix-pSvar.nii.gz
 
         echo "$Dir2Save/$PreFix-Avar.nii.gz has been deleted."
         echo "$Dir2Save/$PreFix-Svar.nii.gz has been deleted."
