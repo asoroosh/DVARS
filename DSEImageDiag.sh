@@ -84,7 +84,7 @@ then
 	need4D=1 
 else 
 	need4D="$3"
-	echo "4D flag is set to '$need4D' so 4D images will not be saved." 
+	echo "4D flag is set to $need4D so 4D images will not be saved." 
 fi
 
 #Create a new directory, if doesn't already exists, as variable OUT
@@ -136,8 +136,10 @@ echo "Generating Svar and Dvar 3D images..."
 fslmaths $Dir2Save/$PreFix-Svar -Tmean $Dir2Save/$PreFix-mSvar
 fslmaths $Dir2Save/$PreFix-Dvar -Tmean $Dir2Save/$PreFix-mDvar
 
-if [ need4D == 0 ]
+if [ $need4D == 0 ]
 then
+	echo "Now deleting 4D images to free up space..."
+
         rm $Dir2Save/$PreFix-Dvar.nii.gz
         rm $Dir2Save/$PreFix-Svar.nii.gz
         rm $Dir2Save/$PreFix-Avar.nii.gz
