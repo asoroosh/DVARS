@@ -145,6 +145,10 @@ fslmeants -i $Dir2Save/$PreFix-Avar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-Avar-
 fslmeants -i $Dir2Save/$PreFix-Svar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-Svar-meants.txt
 fslmeants -i $Dir2Save/$PreFix-Dvar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-Dvar-meants.txt
 
+awk '{ total += $1; count++ } END { print total/count }' $Dir2Save/$PreFix-Avar-meants.txt >  $Dir2Save/$PreFix-Whole-DSE.txt
+awk '{ total += $1; count++ } END { print total/count }' $Dir2Save/$PreFix-Svar-meants.txt >> $Dir2Save/$PreFix-Whole-DSE.txt
+awk '{ total += $1; count++ } END { print total/count }' $Dir2Save/$PreFix-Dvar-meants.txt >> $Dir2Save/$PreFix-Whole-DSE.txt
+
 echo "Generating Avar 3D image..."
 fslmaths $Dir2Save/$PreFix-Avar -Tmean $Dir2Save/$PreFix-mAvar
 
@@ -167,6 +171,9 @@ rm $Dir2Save/$PreFix-mdSvar.nii.gz $Dir2Save/$PreFix-mdDvar.nii.gz
 echo "Generating %Svar and %Dvar time series..."
 fslmeants -i $Dir2Save/$PreFix-pSvar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-pSvar-meants.txt
 fslmeants -i $Dir2Save/$PreFix-pDvar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-pDvar-meants.txt
+
+awk '{ total += $1; count++ } END { print total/count }' $Dir2Save/$PreFix-pSvar-meants.txt >  $Dir2Save/$PreFix-Whole-p-DSE.txt
+awk '{ total += $1; count++ } END { print total/count }' $Dir2Save/$PreFix-pDvar-meants.txt >> $Dir2Save/$PreFix-Whole-p-DSE.txt
 
 echo "Generating Delta%Svar and Delta%Dvar time series..."
 fslmeants -i $Dir2Save/$PreFix-DeltapSvar -m $Tmp-Mean-mask -o $Dir2Save/$PreFix-DeltapSvar-meants.txt
