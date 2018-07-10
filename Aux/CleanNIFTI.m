@@ -98,7 +98,7 @@ Stat.Removables  = [nan_idx;zeros_idx];
 OrigMean = mean(Y,2);
 Stat.OrigMean    = OrigMean;
 Stat.ImgDim = [X0 Y0 Z0 T0];
-%Stat.Obj = V1;
+Stat.Obj = V1;
 %------------------------------------------------------------------------
 % Intensity Normalisation------------------------------------------------------
 IntnstyScl = @(Y,md,scl) (Y./md).*scl; 
