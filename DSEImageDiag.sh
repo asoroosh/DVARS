@@ -47,6 +47,9 @@ OUT               : Directory and a prefix for the outputs, e.g. path/to/dir/SUB
 ==DEPENDENCIES:
 FSL should have been already installed. 
 
+==EXAMPLES:
+sh DSEImageDiag.sh ${WhereFrom}/rfMRI_REST1_7T_PA.nii.gz ${WhereTo}/${SubID}/${SubID} 0
+
 ==REFERENCE:
 Afyouni, Soroosh, and Thomas E. Nichols. "Insight and Inference for DVARS." NeuroImage (2018).
 
