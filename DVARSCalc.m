@@ -70,7 +70,7 @@ function [DVARS,Stat]=DVARSCalc(V0,varargin)
 %
 %   I=4e4; T=1200; Y=randn(I,T);
 %   [DVARS,Stat]=DVARSCalc(Y,'VarType','hIQR','TestMethod','X2','TransPower',1/3);
-%   find(Stat.pvals<0.05./(T-1)) %print corrupted DVARS data-points
+%   find(Stat.pvals<0.05./(T-1) & Stat.DeltapDvar>5) %print corrupted DVARS data-points
 %
 %   For the case with simulated ouliers:
 %
@@ -79,8 +79,16 @@ function [DVARS,Stat]=DVARSCalc(V0,varargin)
 %   Idx_OL=randi(T);
 %   Y(:,Idx_OL)=Y(:,Idx_OL)+1;
 %   [DVARS,Stat]=DVARSCalc(Y,'VarType','hIQR','TestMethod','X2','TransPower',1/3);
-%   find(Stat.pvals<0.05./(T-1)) %print corrupted DVARS data-points
+%   find(Stat.pvals<0.05./(T-1) & Stat.DeltapDvar>5) %print corrupted DVARS data-points
 %
+%   To generate a binary regressor, where the statistically and practically
+%   significant DVARS data-points are 1 and the remaining data-points are 0
+%   you can use DVARSCalc.m as below:
+%   idx = find(Stat.pvals<0.05./(T-1) & Stat.DeltapDvar>5);
+%   DVARSreg = zeros(T0,1);
+%   DVARSreg(idx)   = 1;
+%   DVARSreg(idx+1) = 1;
+%   
 %%%%REFERENCES
 %
 %   Afyouni S. & Nichols T.E., Insights and inference for DVARS, 2017
@@ -382,6 +390,7 @@ Stat.SDVARS_Z   = NDVARS_Z;
 Stat.DeltapDvar = (DVARS2-median(DVARS2))./(4*Stat.Avar)*100;
 %A similar measure, as DeltapDvar is estimated via DSE variance in DSEvar.m as:
 %   Stat.DeltapDvar = (V.Dvar_ts-median(V.Dvar_ts))/mean(V.Avar_ts)*100;
+
 
 %General info
 Stat.dim        = [I1 T0];
