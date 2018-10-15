@@ -81,13 +81,21 @@ function [DVARS,Stat]=DVARSCalc(V0,varargin)
 %   [DVARS,Stat]=DVARSCalc(Y,'VarType','hIQR','TestMethod','X2','TransPower',1/3);
 %   find(Stat.pvals<0.05./(T-1) & Stat.DeltapDvar>5) %print corrupted DVARS data-points
 %
-%   To generate a binary regressor, where the statistically and practically
-%   significant DVARS data-points are 1 and the remaining data-points are 0
-%   you can use DVARSCalc.m as below:
-%   idx = find(Stat.pvals<0.05./(T-1) & Stat.DeltapDvar>5);
+%   To generate a binary regressor, where the significant DVARS data-points 
+%   are 1 and the remaining data-points are 0 you can use DVARSCalc.m as 
+%   below:
+%   
+%   PracticalSigThr = 5;  
+%   idx = find(Stat.pvals<0.05./(T-1) & Stat.DeltapDvar>PracticalSigThr);
 %   DVARSreg = zeros(T0,1);
 %   DVARSreg(idx)   = 1;
 %   DVARSreg(idx+1) = 1;
+%
+%   Variable PracticalSigThr should be chosen manually for a study. For
+%   example in case of HCP, we found 5% is a reasonable threshold to
+%   identify the practically significant data-points. Note that pratically
+%   significant data-points are subset of statistically significant
+%   data-points. 
 %   
 %%%%REFERENCES
 %
