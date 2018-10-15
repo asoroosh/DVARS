@@ -355,6 +355,7 @@ if ~isempty(pIdx) % ED
 end
 %---------------------------The big dude%---------------------------
 if BOLDFlag
+    Y = double(Y);
     if ~isnumeric(Y) && size(Y,1)<=size(Y,2); error('Unknown BOLD intensity image!'); end
     I0 = size(Y,1); T0 = size(Y,2);
     %Remove voxels of zeros/NaNs-----------------
