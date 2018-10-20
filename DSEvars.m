@@ -167,12 +167,15 @@ if ischar(V0)
     [ffpathstr,ffname,ffext]=fileparts(V0);
     if verbose; disp(['-Path to the image is: ' ffpathstr]); end;
     
+    
+    %if you are using MATLAB <2016, please replace 'contains' with 'strfind'
     if contains(ffname,'.dtseries') || contains(ffext,'.dtseries')
         if verbose; disp(['--File is CIFTI: ' ffname ffext]); end;
         V1=ft_read_cifti(V0);
         V2=V1.dtseries;
         I0=size(V2,1); T0=size(V2,2);
         Y=V2; clear V2 V1; 
+    %if you are using MATLAB <2016, please replace 'contains' with 'strfind'    
     elseif ~contains(ffname,'.dtseries') || contains(ffname,'.nii') 
         if verbose; disp(['--File is NIFTI: ' ffname ffext]); end;
         V1 = load_untouch_nii(V0);
