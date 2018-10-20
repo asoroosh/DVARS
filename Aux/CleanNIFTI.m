@@ -72,9 +72,15 @@ elseif isnumeric(V0) && size(V0,1)>size(V0,2)
     if verbose; disp('-Input is a Matrix.'); end;
     Y = double(V0);  
     I0= size(Y,1); T0 = size(Y,2);
-elseif isnumeric(V0) && size(V0,1)<=size(V0,2)
+elseif isnumeric(V0) && size(V0,1)<=size(V0,2) && size(V0,3)==1
     if verbose; disp('-Input is a Matrix.'); end;
     error('Check the input, matrix should be in form of IxT, where I=XxYxZ!');    
+elseif isnumeric(V0) && size(V0,3)>1 && size(V0,4)>1
+    disp(['-Input is a 4D matrix.'])
+    X0 = size(V0,1); Y0 = size(V0,2); Z0 = size(V0,3); T0 = size(V0,4);
+    I0 = prod([X0,Y0,Z0]);
+    Y  = reshape(V0,[I0,T0]); clear V2;
+    V1 = [];
 end
 
 %Y = double(Y);%to work with int 16bit as well.
