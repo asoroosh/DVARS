@@ -1,4 +1,5 @@
 # Introduction
+[![DOI](https://zenodo.org/badge/75120155.svg)](https://zenodo.org/badge/latestdoi/75120155)
 
 Series of scripts, mainly in MATLAB and BASH, to support DVARS inference and DSE variance decomposition proposed in
 
