@@ -22,6 +22,14 @@ All materials presented in Afyouni&Nichols (2017) can be reproduced using codes 
 * `'/Nifti_Util'` for neuroimaging analysis. This folder contains selective function from  [optional].
 * `FSL 5.0.9` (or later) to produce DSE variance images [optional].
 
+### Octave <a name="octave"></a>
+Both DVARS inference and DSE decomposition methods are also available for Octave via scripts under `Octave/`. Note that you require statistics package to run the script in Octave:
+```
+pkg install -forge io
+pkg install -forge statistics
+```
+We have only tested the script on Octave 4.4.1.
+
 # fMRI Diagnostics
 Here we show the proposed diagnostic figure and table can be used to examine the quality of the fMRI datasets. We start with basic example, on minimally pre-processed HCP subject 115320, which can be used to perform _DVARS inference_, _DSE variance decomposition_ and eventually _fMRI diagnostic_.
 
