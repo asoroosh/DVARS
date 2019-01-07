@@ -10,21 +10,67 @@ Created on Mon Mar 12 11:56:21 2018
 #DO NOT USE THIS FUNCTION!! IT IS NOT FINISHED YET! 
 #USE MATLAB VERSIONS INSTEAD!
 ##########################################################
-##########################################################
+##########################################################    
+    
+def CleanNIFTI(V,\
+               scl = 1,\
+               demean = True,\
+               **kwargs):
+    
+    import numpy as np 
+    import nibabel as nib #pip install nibabel
+    import os
+    
+    if isinstance(V, str):
+        print('Input is a path to a nifti file')
+        [pth, fn] = os.path.split(V)
+        
+        filename =  os.path.expandvars(V)
+        imobj = nib.load(filename, mmap=False)
+        imdat = imobj.get_data().astype(float)
+        
+        T = imdat.shape[3]
+        I = np.prod(imdat.shape[0:3])
+        Y = np.reshape(imdat,(I,T))
+                   
+    else:
+        print('Input is a matrix.')
+        Y = V; del V
+        T = np.shape(Y)[1]
+        I = np.shape(Y)[0]
+        imobj = ''
 
-#DSE('/Users/sorooshafyouni/Desktop/HCP/135932/MNINonLinear/Results/rfMRI_REST1_LR/rfMRI_REST1_LR_hp2000_clean.nii.gz')
-#print "DONE!"
-        #def DSE(path2img,**kwargs):
-from __future__ import division
-#import numpy as np 
-#import nibabel as nib #pip install nibabel
-#import os.path as op
-#import os
-#import scipy as sp
-#import scipy.stats as st
-#import scipy.io as matfile
-#import json
 
+    print("The image has total of: " + str(I) + " voxels & " + str(T) + " time-points.")
+    #find zeros or nans
+    zrIdx = np.where(~Y.any(axis=1))[0];
+    nanIdx = np.where(np.isnan(Y))[0]; 
+    rmvIdx = np.concatenate((zrIdx,nanIdx));
+    
+    Y = np.delete(Y,rmvIdx,axis=0)
+    I1 = Y.shape[0]
+    
+    print("After cleaning; " + str(I1) + " voxels & " + str(T) + " time-points.")     
+        
+    #Intensity Normalisation############################## 
+    print("Intensity Normalisation to " + str(scl))
+    
+    md = np.median(np.mean(Y,axis = 1)) #median of mean image
+    Y = Y/md * scl;
+    ######################################################
+    
+    #Demean each time series##############################
+    if demean: 
+        print("Demean along T")
+        mY2 = np.mean(Y,axis=1)
+        Y = Y-np.transpose(np.tile(mY2,(T,1)));
+    ######################################################            
+    
+        
+    return (Y, T, I, I1, rmvIdx, imobj)
+
+######################################################
+######################################################
 def SaveMe2txt(Dict2Save,Where2Save):
     import numpy as np 
     import os
@@ -33,7 +79,8 @@ def SaveMe2txt(Dict2Save,Where2Save):
         os.makedirs(Where2Save)
     for varname in Dict2Save.keys():       
         np.savetxt(Where2Save + '/DSE_' + str(varname) + '.txt',Dict2Save[varname],fmt='%10.5f')
-
+######################################################
+######################################################
 def SaveMe2Nifti(Dict2Save,Where2Save,imobj,rmvIdx):
     import numpy as np 
     import nibabel as nib #pip install nibabel
@@ -70,15 +117,14 @@ def SaveMe2Nifti(Dict2Save,Where2Save,imobj,rmvIdx):
         nib.save(imgobj_vars, Where2Save+'/DSE_'+ str(varname) +'.nii.gz')
         
         del(Y2I,I3Y,G) 
-        
-
 ##########################################################
 ##########################################################
 
-def DSE(Y,\
+def DSE_Calc(Y,\
         NewDir2DSE='',\
         scl = 1,\
         demean = True,\
+        plotme = True,\
         **kwargs):
     import numpy as np 
     import matplotlib.pyplot as plt
@@ -89,8 +135,13 @@ def DSE(Y,\
         
     #READ AND CLEAN###########################################
     
-    [Y,I,T,I1,rmvIdx,imobj]  = CleanNIFTI(Y,scl=scl,demean=demean)
-    
+    NFT  = CleanNIFTI(Y,scl=scl,demean=demean)
+    Y = NFT[0];
+    T = NFT[1];
+    #I = NFT[2];
+    I1 = NFT[3];
+    rmvIdx = NFT[4];
+    imobj  = NFT[5];
     ##########################################################
     
     
@@ -125,12 +176,15 @@ def DSE(Y,\
     VImg_Svar = np.mean(Svar**2,axis=1)/2;
     VImg_Evar = np.mean(np.array((Yhead**2,Ytail**2)),axis=0); # <<<< should be checked
     
-    vimg = {'Avar_Img3':VImg_Avar,'Dvar_Img3':VImg_Dvar,
+    if imobj != '':
+        print('Writing the DSE images...')
+        vimg = {'Avar_Img3':VImg_Avar,'Dvar_Img3':VImg_Dvar,
             'Svar_Img3':VImg_Svar,'Evar_Img3':VImg_Evar,
             'Avar_Img4':VImg_Avar_ts,'Dvar_Img4':VImg_Dvar_ts,
             'Svar_Img4':VImg_Svar_ts,'Evar_Img4':VImg_Evar_ts};
     
-    SaveMe2Nifti(vimg,NewDir2DSE+"/VarImg",imobj,rmvIdx)
+        SaveMe2Nifti(vimg,NewDir2DSE+"/VarImg",imobj,rmvIdx)
+    else: vimg=''
              
     #DSE Time series -- averaged across I#######################
     print("DSE time series")
@@ -231,24 +285,23 @@ def DSE(Y,\
                 'RootMeanOfSquares':MS},\
     NewDir2DSE+"/VarStat")
     
-    DSEVarfig = plt.figure()       
-    plt.plot(vts['Svar_ts'])
-    plt.plot(vts['Dvar_ts'])
-    plt.legend(['Svar_ts', 'Dvar_ts'], loc='upper left')
-    plt.savefig(NewDir2DSE+"/VarStat/DSvars.png")
-    plt.close(DSEVarfig)
-    #plt.show() 
+    if plotme:
+        DSEVarfig = plt.figure()       
+        plt.plot(vts['Svar_ts'])
+        plt.plot(vts['Dvar_ts'])
+        plt.legend(['Svar_ts', 'Dvar_ts'], loc='upper left')
+        plt.savefig(NewDir2DSE+"/VarStat/DSvars.png")
+        plt.close(DSEVarfig)
+        #plt.show() 
     
-    #Var_Tab = [V_w_Avar,V_w_Dvar,V_w_Svar,V_w_Evar;...
-    #    V_g_Avar,V_g_Dvar,V_g_Svar,V_g_Evar;...
-    #    V_ng_Avar,V_ng_Dvar,V_ng_Svar,V_ng_Evar];
+        #Var_Tab = [V_w_Avar,V_w_Dvar,V_w_Svar,V_w_Evar;...
+        #    V_g_Avar,V_g_Dvar,V_g_Svar,V_g_Evar;...
+        #    V_ng_Avar,V_ng_Dvar,V_ng_Svar,V_ng_Evar];
     
-    ###############################################################################
-
-
+    ######################################################
+    return vv,vts,Prntg,MS,RMS,RelVar,Expd,vimg
 ##########################################################
-##########################################################
-    
+##########################################################   
 def DVARS_Calc(Y,\
                dd=1, \
                WhichExpVal = 'median', WhichVar = 'hIQRd',\
@@ -263,26 +316,30 @@ def DVARS_Calc(Y,\
     #dd = 1;
     
     ##FUNCS####################################################
-    def IQRsd(x):   return ((np.percentile(x,75)  - np.percentile(x,25))/1.349);
-    def H_IQRsd(x): return ((np.percentile(x,50)  - np.percentile(x,25))/1.349*2);
+    def IQRsd(x):   return ((np.percentile(x,75,axis=0)  - np.percentile(x,25,axis=0))/1.349);
+    def H_IQRsd(x): return ((np.percentile(x,50,axis=0)  - np.percentile(x,25,axis=0))/1.349*2);
     #--
     #if tsflag
     #    def Zstat(x,m,s): abs((x-m)/s);
     #else
     
-    def Zstat(x,m,s):   return((x-m)/s)
-    def Zp(x,m,s):      return(1-st.norm.cdf(Zstat(x,m,s)))
+    def ZStat(x,m,s):   return((x-m)/s)
+    def Zp(x,m,s):      return(1-st.norm.cdf(ZStat(x,m,s)))
     #--
     def X2Stat(x,m,s):  return(2*m/s**2*x)
     def X2df(m,s):      return(2*m**2/s**2)
     #X2p    =   @(x,m,s) 1-chi2cdf(X2stat(x,m,s),X2df(m,s));
     def X2p0(x,m,s):    return((X2Stat(x,m,s)-X2df(m,s))/np.sqrt(2*X2df(m,s)));
-    def X2p(x,m,s):     return(st.chi2.cdf(X2Stat(x,m,s),X2df(m,s),'upper'));
+    def X2p(x,m,s):     return(st.chi2.cdf(X2Stat(x,m,s),X2df(m,s)));
     
     
     #READ AND CLEAN###########################################
     
-    [Y,I,T,I1]  = CleanNIFTI(Y,scl=scl,demean=demean)
+    NFT  = CleanNIFTI(Y,scl=scl,demean=demean)
+    Y = NFT[0];
+    T = NFT[1];
+    #I = NFT[2];
+    I1 = NFT[3];
     
     ##########################################################
     
@@ -292,27 +349,30 @@ def DVARS_Calc(Y,\
     DVARS = np.sqrt(np.sum(Dvar**2,axis=0)/I1)
     
     DVARS2  = np.mean(Dvar**2,axis=0);
-    Rob_S_D = IQRsd([*zip(*Dvar)]);
-    Rob_S_D = [*zip(*Rob_S_D)]
+    Rob_S_D = IQRsd(Dvar);
     
     Z       = DVARS2**dd;
     M_Z     = np.median(Z,axis=0);
     
+    
+    print('Estimating the moments...')
     DVMean = {'sig2bar':np.mean(Rob_S_D**2,axis=0),\
               'sig2median':np.median(Rob_S_D**2,axis=0),\
-               'median':np.median(DVARS2,axis=0),\
-               'sigbar2':np.mean(Rob_S_D,axis=0)**2,\
-               'xbar':np.mean(DVARS2,axis=0)};   
+              'median':np.median(DVARS2,axis=0),\
+              'sigbar2':np.mean(Rob_S_D,axis=0)**2,\
+              'xbar':np.mean(DVARS2,axis=0)};   
               
     DVVar  = {'S2':np.var(DVARS2,axis=0),\
               'IQRd':(1/dd*M_Z**(1/dd-1)*IQRsd(Z))**2,\
               'hIQRd':(1/dd*M_Z**(1/dd-1)*H_IQRsd(Z))**2};
 
+    print('Estimating Delta % Vars')
     DeltapDvar = (DVARS2-np.median(DVARS2,axis=0))/(4*np.mean(Y**2))*100; #This is one other Standardised DVARS!
     
     
-    M_DV2         = DVMean(WhichExpVal);             
-    S_DV2         = np.sqrt(DVVar(WhichVar));       
+    print('Doing the inference...')
+    M_DV2         = DVMean[WhichExpVal];             
+    S_DV2         = np.sqrt(DVVar[WhichVar]);       
     Pval          = X2p(DVARS2,M_DV2,S_DV2);
     Zval          = ZStat(DVARS2,M_DV2,S_DV2);
     c             = X2Stat(DVARS2,M_DV2,S_DV2);
@@ -328,65 +388,12 @@ def DVARS_Calc(Y,\
 
 ##########################################################
 ##########################################################
-    
-    
-def CleanNIFTI(V,\
-               scl = 1,\
-               demean = True,\
-               **kwargs):
-    
-    import numpy as np 
-    import nibabel as nib #pip install nibabel
-    import os
-    
-    if isinstance(V, str):
-        [pth, fn] = os.path.split(V)
-        
-        filename =  os.path.expandvars(V)
-        imobj = nib.load(filename, mmap=False)
-        imdat = imobj.get_data().astype(float)
-        
-        T = imdat.shape[3]
-        I = np.prod(imdat.shape[0:3])
-        Y = np.reshape(imdat,(I,T))
-        
-        print("The image has total of: " + str(I) + " voxels & " + str(T) + " time-points.")
-        #find zeros or nans
-        zrIdx = np.where(~Y.any(axis=1))[0];
-        nanIdx = np.where(np.isnan(Y))[0]; 
-        rmvIdx = np.concatenate((zrIdx,nanIdx));
-        
-        Y = np.delete(Y,rmvIdx,axis=0)
-        I1 = Y.shape[0]
-        
-        print("After cleaning; " + str(I1) + " voxels & " + str(T) + " time-points.")        
-        
-    elif isinstance(V, str):
-        Y = V; del V
-        T = np.shape(Y)[1]
-        I = np.shape(Y)[0]
-        imobj = ''
-        
-    #Intensity Normalisation############################## 
-    print("Intensity Normalisation to " + str(scl))
-    
-    md = np.median(np.mean(Y,axis = 1))
-    Y = Y/md * scl;
-    ######################################################
-    
-    #Demean each time series##############################
-    if demean: 
-        print("Demean along T")
-        mY2 = np.mean(Y,axis=1)
-        Y = Y-np.transpose(np.tile(mY2,(T,1)));
-    ######################################################            
-    
-        
-    return Y, T, I, rmvIdx, imobj
 
 def main():
         ################################Read and Clean
-        Path2Img = '/Users/sorooshafyouni/Desktop/HCP/135932/MNINonLinear/Results/rfMRI_REST1_LR/rfMRI_REST1_LR_hp2000_clean.nii.gz'
+        V = '/Users/sorooshafyouni/Desktop/HCP\
+        /135932/135932_RS/MNINonLinear/Results/rfMRI_REST1_LR/\
+        rfMRI_REST1_LR_hp2000_clean.nii.gz'
 
         ###################################################################
         NewDir2DSE = pth + '/DSE/'
