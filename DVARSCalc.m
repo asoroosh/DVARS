@@ -28,7 +28,7 @@ function [DVARS,Stat]=DVARSCalc(V0,varargin)
 %                   robust expected value is empirical median. 
 %                   e.g. [DVARS,Stat]=DVARSCalc(V0,'MeanType',3)
 %
-%   'TransPower':   Power of transformation [default:1/3]
+%   'TransPower':   Power of transformation [default:1]
 %                   e.g. [DVARS,Stat]=DVARSCalc(V0,'TestMethod','X2','TransPower',1/3)
 %
 %   'RDVARS':       By passing this arg, the function generates the

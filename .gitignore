@@ -1,3 +1,4 @@
 Pendings/
 *.m~
 __pycache__
+*.pyc
