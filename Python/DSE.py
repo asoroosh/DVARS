@@ -20,7 +20,8 @@ University of Oxford, 2018
 srafyouni@gmail.com
 """
 def CleanNIFTI(V,\
-               scl = 1,\
+               scl  = 0,\
+               norm = 0,\
                demean = True,\
                **kwargs):
     """
@@ -78,10 +79,17 @@ def CleanNIFTI(V,\
     print("CleanNIFTI::: After cleaning; " + str(I1) + " voxels & " + str(T) + " time-points.")
 
     #Intensity Normalisation##############################
+    
+    MeanImage = np.mean(Y,axis = 1)
     if scl:
-        print("CleanNIFTI::: Intensity Normalisation to " + str(scl))
-        md = np.median(np.mean(Y,axis = 1)) #median of mean image
-        Y = Y/md * scl;
+        print("CleanNIFTI::: Scaled by " + str(scl))
+        #md = np.median(MeanImage) #median of mean image
+        md = 1
+        Y  = Y/md * scl;        
+    elif norm:
+        print("CleanNIFTI::: Intensity Normalisation done by: " + str(scl))
+        md = np.median(MeanImage) #median of mean image
+        Y  = Y/md * norm;
     else:
         print('CleanNIFTI::: No normalisation/scaling has been set!')
     ######################################################
@@ -89,12 +97,18 @@ def CleanNIFTI(V,\
     #Demean each time series##############################
     if demean:
         print("CleanNIFTI::: Demean along T")
-        mY2 = np.mean(Y,axis=1)
-        Y = Y-np.transpose(np.tile(mY2,(T,1)));
+        Y = Y-np.transpose(np.tile(MeanImage,(T,1)));
     ######################################################
 
 
-    return (Y, T, I, I1, rmvIdx, imobj)
+#    return {'Y':Y,\
+#            'T':T,\
+#            'I':I,\
+#            'I1':I1,\
+#            'removables':rmvIdx,\
+#            'ImageObj':imobj}
+
+    return (Y,T,I,I1,rmvIdx,imobj,MeanImage)
 
 ######################################################
 ######################################################
