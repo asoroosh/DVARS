@@ -23,7 +23,7 @@ def CleanNIFTI(V,\
                scl  = 0,\
                norm = 0,\
                demean = True,\
-               **kwargs):
+               copy   = True):
     """
     CleanNIFTI(V,scl = 1,demean = True)
     Cleans and reshape the input images. 
@@ -46,6 +46,12 @@ def CleanNIFTI(V,\
     import numpy as np
     import nibabel as nib #pip install nibabel
     import os
+    
+    if copy:
+        #Also V is going to be copied only if it is not str
+        #see the else argument in the next if statement
+        scl  =  np.copy(scl)
+        norm =  np.copy(norm)
 
     if isinstance(V, str):
         print('CleanNIFTI::: Input is a path to a nifti file')
@@ -60,16 +66,25 @@ def CleanNIFTI(V,\
         Y = np.reshape(imdat,(I,T))
 
     else:
-        print('CleanNIFTI::: Input is a matrix.')
-        Y = V; del V
-        T = np.shape(Y)[1]
-        I = np.shape(Y)[0]
-        imobj = ''
+        Y = V.copy()
+        del V #to save some memory, ffs
+        shapes = np.shape(Y)
+        if len(shapes)==2:
+            print('CleanNIFTI::: Input is a 2D matrix.')
+            T = np.shape(Y)[1]
+            I = np.shape(Y)[0]
+            imobj = ''
+        elif len(shapes)==4:
+            print('CleanNIFTI::: Input is a 4D matrix.')
+            I = np.prod(np.shape(Y)[:3])
+            T = np.shape(Y)[-1]
+            Y = np.reshape(Y,(I,T))
+        else: raise ValueError('CleanNIFTI::: the shape of the input should be either 2D or 4D')
 
 
     print("CleanNIFTI::: The image has total of: " + str(I) + " voxels & " + str(T) + " time-points.")
     #find zeros or nans
-    zrIdx = np.where(~Y.any(axis=1))[0];
+    zrIdx  = np.where(~Y.any(axis=1))[0];
     nanIdx = np.where(np.isnan(Y))[0];
     rmvIdx = np.concatenate((zrIdx,nanIdx));
 
@@ -81,17 +96,20 @@ def CleanNIFTI(V,\
     #Intensity Normalisation##############################
     
     MeanImage = np.mean(Y,axis = 1)
-    if scl:
+    if scl!=0 and norm==0:
         print("CleanNIFTI::: Scaled by " + str(scl))
         #md = np.median(MeanImage) #median of mean image
         md = 1
         Y  = Y/md * scl;        
-    elif norm:
+    elif norm!=0 and scl==0:
         print("CleanNIFTI::: Intensity Normalisation done by: " + str(scl))
         md = np.median(MeanImage) #median of mean image
         Y  = Y/md * norm;
-    else:
+    elif norm==0 and scl==0: 
         print('CleanNIFTI::: No normalisation/scaling has been set!')
+    else:
+        raise ValueError('CleanNIFTI::: norm (' + str(norm) + ') and scl (' + str(scl) + ') parameters are wrong!')
+        
     ######################################################
 
     #Demean each time series##############################
@@ -171,10 +189,10 @@ def SaveMe2Nifti(Dict2Save,Where2Save,imobj,rmvIdx):
 def DSE_Calc(Y,\
         NewDir2DSE='',\
         scl = 0,\
-        demean = True,\
+        norm = 0,\
+        demean   = True,\
         DSEImage = False,\
-        verbose = False,\
-        **kwargs):
+        verbose  = False):
     """
     DSE_Calc(Y, NewDir2DSE='', scl = 0, demean = True, \
              DSEImage = False, verbose = False)    
@@ -216,12 +234,13 @@ INPUTS:
         NewDir2DSE = (os.getcwd() + '/DSE/')
 
     #READ AND CLEAN###########################################
-
-    NFT  = CleanNIFTI(Y,scl=scl,demean=demean)
+    Y = Y.copy()
+    
+    NFT  = CleanNIFTI(Y,scl=scl,demean=demean,norm=norm)
     Y = NFT[0];
     T = NFT[1];
     #I = NFT[2];
-    I1 = NFT[3];
+    I1     = NFT[3];
     rmvIdx = NFT[4];
     imobj  = NFT[5];
     ##########################################################
@@ -231,12 +250,17 @@ INPUTS:
 
     #Dvar
     Dvar = Y[:,0:T-1]-Y[:,1:T] #OMG, python!
-
     bar_Dvar  = np.sum(Dvar,axis=0)/I1;
+
+    #print(Dvar[:5,:5])
+    #print(I1)
 
     #Svar
     Svar = Y[:,0:T-1]+Y[:,1:T]
     bar_Svar = np.sum(Svar,axis=0)/I1;
+
+    #print(Svar[:5,:5])
+    #print(I1)
 
     #Evar
     Ytail = Y[:,-1];
@@ -277,14 +301,18 @@ INPUTS:
     #DSE Time series -- averaged across I#######################
     print("DSE_Calc::: DSE time series")
     V_Avar_ts = np.mean(VImg_Avar_ts,axis=0);
+    
     V_Dvar_ts = np.mean(VImg_Dvar_ts,axis=0);
     V_Svar_ts = np.mean(VImg_Svar_ts,axis=0);
+    
     V_Evar_ts = np.mean(VImg_Evar_ts,axis=0);
     ####### Whole Variances
 
     V_w_Avar  = np.sum(V_Avar_ts);
+    
     V_w_Dvar  = np.sum(V_Dvar_ts);
     V_w_Svar  = np.sum(V_Svar_ts);
+    
     V_w_Evar  = np.sum(V_Evar_ts);
 
     ###########Global
@@ -409,7 +437,7 @@ INPUTS:
     ######################################################
     DSEOut = {'VarScalar':vv\
             ,'VarTimeSeries':vts\
-            ,'Percent':Prntg\
+            ,'percent':Prntg\
             ,'MeanSquared':MS\
             ,'RMS':RMS\
             ,'Relative':RelVar\
@@ -423,11 +451,13 @@ INPUTS:
 
 def DVARS_Calc(Y,\
                dd=1, \
-               WhichExpVal = 'median', WhichVar = 'hIQRd',\
-               scl = 0,\
+               WhichExpVal = 'median', 
+               WhichVar = 'hIQRd',\
+               scl  = 0,\
+               norm = 0,\
                demean = True,\
                DeltapDvarThr = 5,\
-               **kwargs):
+               copy = True):
     
     """
     DVARS_Calc(Y, dd=1, WhichExpVal = 'median', WhichVar = 'hIQRd',\
@@ -502,7 +532,7 @@ INPUTS:
 
     #READ AND CLEAN###########################################
 
-    NFT  = CleanNIFTI(Y,scl=scl,demean=demean)
+    NFT  = CleanNIFTI(Y,scl=scl,norm=norm,demean=demean)
     Y = NFT[0];
     T = NFT[1];
     #I = NFT[2];
@@ -568,7 +598,6 @@ INPUTS:
     #plt.plot(DeltapDvar)
     #plt.close(DVARSfig)
     #plt.show()
-
 
     DVARSOut = {'DVARS': {'DVARS': DVARS, 'DeltapDvar': DeltapDvar,'NDVARS_X2': NDVARS_X2},\
                 'Inference': {'Pval': Pval,'H': Hval, 'HStat': Hval_stat, 'HPrac': Hval_practical},\
