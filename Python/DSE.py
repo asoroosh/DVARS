@@ -110,14 +110,13 @@ def CleanNIFTI(V,\
     else:
         raise ValueError('CleanNIFTI::: norm (' + str(norm) + ') and scl (' + str(scl) + ') parameters are wrong!')
         
-    ######################################################
-
     #Demean each time series##############################
     if demean:
         print("CleanNIFTI::: Demean along T")
         Y = Y-np.transpose(np.tile(MeanImage,(T,1)));
-    ######################################################
-
+    
+    #Global Signal#########################################
+    GS = np.mean(Y,axis = 0)
 
 #    return {'Y':Y,\
 #            'T':T,\
@@ -126,7 +125,7 @@ def CleanNIFTI(V,\
 #            'removables':rmvIdx,\
 #            'ImageObj':imobj}
 
-    return (Y,T,I,I1,rmvIdx,imobj,MeanImage)
+    return (Y,T,I,I1,rmvIdx,imobj,GS,MeanImage)
 
 ######################################################
 ######################################################
