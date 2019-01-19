@@ -244,7 +244,6 @@ INPUTS:
     imobj  = NFT[5];
     ##########################################################
 
-
     bar_Y  = np.sum(Y,axis=0)/I1; #global signal is here!
 
     #Dvar
@@ -283,14 +282,14 @@ INPUTS:
 
     if imobj != '' and DSEImage:
         print('DSE_Calc::: Writing the DSE images...')
-        vimg = {'Avar_Img3':VImg_Avar,\
-                'Dvar_Img3':VImg_Dvar,\
-                'Svar_Img3':VImg_Svar,\
-                'Evar_Img3':VImg_Evar,\
-                'Avar_Img4':VImg_Avar_ts,\
-                'Dvar_Img4':VImg_Dvar_ts,\
-                'Svar_Img4':VImg_Svar_ts,\
-                'Evar_Img4':VImg_Evar_ts};
+        vimg = {'Avar_Img3': VImg_Avar,\
+                'Dvar_Img3': VImg_Dvar,\
+                'Svar_Img3': VImg_Svar,\
+                'Evar_Img3': VImg_Evar,\
+                'Avar_Img4': VImg_Avar_ts,\
+                'Dvar_Img4': VImg_Dvar_ts,\
+                'Svar_Img4': VImg_Svar_ts,\
+                'Evar_Img4': VImg_Evar_ts};
 
         SaveMe2Nifti(vimg,NewDir2DSE+"/VarImg",imobj,rmvIdx)
     else:
@@ -355,18 +354,18 @@ INPUTS:
            'Evar_ts':V_Evar_ts};
 
 
-    vv = {'Avar':V_w_Avar,\
-          'Dvar':V_w_Dvar,\
-          'Svar':V_w_Svar,\
-          'Evar':V_w_Evar,\
+    vv = {'Avar': V_w_Avar,\
+          'Dvar': V_w_Dvar,\
+          'Svar': V_w_Svar,\
+          'Evar': V_w_Evar,\
           'gAvar': V_g_Avar ,\
           'gDvar': V_g_Dvar,\
           'gSvar': V_g_Svar,\
           'gEvar': V_g_Evar,\
-          'ngAvar':V_ng_Avar,\
-          'ngDvar':V_ng_Dvar,\
-          'ngSvar':V_ng_Svar,\
-          'ngEvar':V_ng_Evar};
+          'ngAvar': V_ng_Avar,\
+          'ngDvar': V_ng_Dvar,\
+          'ngSvar': V_ng_Svar,\
+          'ngEvar': V_ng_Evar};
 
     print("DSE_Calc::: DSE Variances:")
     for keys, values in vv.items():
@@ -588,10 +587,10 @@ INPUTS:
     print('DVARS_Calc::: ' + str(np.size(Hval_stat)) + ' of volumes are statistically significant.')
 
     Hval_practical = np.where(DeltapDvar>DeltapDvarThr)
-    print('DVARS_Calc::: ' + str(np.size(Hval_practical)) + ' of volumes are statistically significant.')
+    print('DVARS_Calc::: ' + str(np.size(Hval_practical)) + ' of volumes are practically significant.')
 
     Hval = np.intersect1d(Hval_stat,Hval_practical);
-
+    print('DVARS_Calc::: ' + str(np.size(Hval)) + ' of volumes are significant.')
 
     #DVARSfig = plt.figure()
     #plt.plot(DeltapDvar)

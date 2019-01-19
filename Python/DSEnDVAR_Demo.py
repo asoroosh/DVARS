@@ -8,7 +8,6 @@ University of Oxford, 2019
 """
 
 from DSE import DSE_Calc, DVARS_Calc, CleanNIFTI
-import numpy as np
 import pickle
 
 
@@ -18,29 +17,38 @@ DSEResults_Dir = '/Users/sorooshafyouni/Home/GitClone/DVARS/Python/'
 
 #Write me to a pickle, quickly!
 def Save2Pickle(Path2File,Vars):
-    import pickle
     with open(Path2File,"wb") as f:
         pickle.dump(Vars, f)		
 
 ##++++++++++++++++++++++++++++++++++++
 ##+++++++++++++++++++CLEAN THE NIFTI+++
 #
+print('========Read and clean...')
+
 Vout = CleanNIFTI(RS_fMRI_Dir,scl = 1/100)
 #
 GS = Vout[6] # this is the global signal 
 YY = Vout[0] # This is the cleaned version of the image. 
 
+del Vout
+
 # Just to test everything is sound with the DSE and DAVRS code. 
 #YY = np.random.randn(1500,500)
 
+
+
+print('========Running DSE...')
 ##+++++++++++++++++++DSE+++++
 DSEOut  = DSE_Calc( YY,\
         scl         = 0,\
         norm        = 0,\
         DSEImage    = False,\
-        verbose     = True)
+        verbose     = False)
 
 
+
+
+print('========Running DVARS...')
 #+++++++++++++++++++DVARS++++
 DVARSOut = DVARS_Calc(YY,\
                dd            = 1, \
@@ -50,9 +58,10 @@ DVARSOut = DVARS_Calc(YY,\
                scl           = 0,\
                DeltapDvarThr = 5)
 
+
 #++++Write me on a pickle!++++++++++
 Save2Pickle(DSEResults_Dir + 'GS_Demo.pkl',GS)
 Save2Pickle(DSEResults_Dir + 'DSE_Demo.pkl',DSEOut)
 Save2Pickle(DSEResults_Dir + 'DVARS_Demo.pkl',DVARSOut)
 
-#A = pickle.load(open("DSE_Demo.pkl", "rb"))
+print('DONE!')
