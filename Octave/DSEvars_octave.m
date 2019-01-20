@@ -169,14 +169,14 @@ if ischar(V0)
     
     
     %if you are using MATLAB <2016, please replace 'contains' with 'strfind'
-    if strfind(ffname,'.dtseries') || strfind(ffext,'.dtseries')
+    if ~isempty(strfind(ffname,'.dtseries')) || ~isempty(strfind(ffext,'.dtseries'))
         if verbose; disp(['--File is CIFTI: ' ffname ffext]); end;
         V1=ft_read_cifti(V0);
         V2=V1.dtseries;
         I0=size(V2,1); T0=size(V2,2);
         Y=V2; clear V2 V1; 
     %if you are using MATLAB <2016, please replace 'contains' with 'strfind'    
-    elseif ~strfind(ffname,'.dtseries') || strfind(ffname,'.nii') 
+    elseif isempty(strfind(ffname,'.dtseries')) || ~isempty(strfind(ffname,'.nii')) 
         if verbose; disp(['--File is NIFTI: ' ffname ffext]); end;
         V1 = load_untouch_nii(V0);
         V2 = V1.img; 
