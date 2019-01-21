@@ -191,6 +191,7 @@ def DSE_Calc(Y,\
         norm = 0,\
         demean   = True,\
         DSEImage = False,\
+        imobj = '',\
         verbose  = False):
     """
     DSE_Calc(Y, NewDir2DSE='', scl = 0, demean = True, \
@@ -293,7 +294,7 @@ INPUTS:
         SaveMe2Nifti(vimg,NewDir2DSE+"/VarImg",imobj,rmvIdx)
     else:
         vimg=''
-        print('DSE_Calc::: The DSE image option was left False, if you need them trigger option DSEImage=.')
+        print('DSE_Calc::: The DSE image option was left False or there is no image object, if you need them trigger option DSEImage=.')
 
     #DSE Time series -- averaged across I#######################
     print("DSE_Calc::: DSE time series")
