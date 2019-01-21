@@ -286,9 +286,9 @@ INPUTS:
                 'Svar_Img3': VImg_Svar/VImg_Avar*100,\
                 'Evar_Img3': VImg_Evar/VImg_Avar*100,\
                 'Avar_Img4': VImg_Avar_ts,\
-                'Dvar_Img4': VImg_Dvar_ts/np.tile(VImg_Avar,(T-1,1))*100,\
-                'Svar_Img4': VImg_Svar_ts/np.tile(VImg_Avar,(T-1,1))*100,\
-                'Evar_Img4': VImg_Evar_ts/np.tile(VImg_Avar,(T-1,1))*100};
+                'Dvar_Img4': VImg_Dvar_ts/np.tile(VImg_Avar,(1,T-1))*100,\
+                'Svar_Img4': VImg_Svar_ts/np.tile(VImg_Avar,(1,T-1))*100,\
+                'Evar_Img4': VImg_Evar_ts/np.tile(VImg_Avar,(1,T-1))*100};
 
         SaveMe2Nifti(vimg,NewDir2DSE+"/VarImg",imobj,rmvIdx)
     else:
