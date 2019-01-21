@@ -233,7 +233,6 @@ INPUTS:
         NewDir2DSE = (os.getcwd() + '/DSE/')
 
     #READ AND CLEAN###########################################
-    Y = Y.copy()
     
     NFT  = CleanNIFTI(Y,scl=scl,demean=demean,norm=norm)
     Y = NFT[0];
