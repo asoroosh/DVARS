@@ -81,7 +81,6 @@ def CleanNIFTI(V,\
             Y = np.reshape(Y,(I,T))
         else: raise ValueError('CleanNIFTI::: the shape of the input should be either 2D or 4D')
 
-
     print("CleanNIFTI::: The image has total of: " + str(I) + " voxels & " + str(T) + " time-points.")
     #find zeros or nans
     zrIdx  = np.where(~Y.any(axis=1))[0];
@@ -287,9 +286,9 @@ INPUTS:
                 'Svar_Img3': VImg_Svar/VImg_Avar*100,\
                 'Evar_Img3': VImg_Evar/VImg_Avar*100,\
                 'Avar_Img4': VImg_Avar_ts,\
-                'Dvar_Img4': VImg_Dvar_ts/np.tile(VImg_Avar,T-1)*100,\
-                'Svar_Img4': VImg_Svar_ts/np.tile(VImg_Avar,T-1)*100,\
-                'Evar_Img4': VImg_Evar_ts/np.tile(VImg_Avar,T-1)*100};
+                'Dvar_Img4': VImg_Dvar_ts/np.tile(VImg_Avar,(T-1,1))*100,\
+                'Svar_Img4': VImg_Svar_ts/np.tile(VImg_Avar,(T-1,1))*100,\
+                'Evar_Img4': VImg_Evar_ts/np.tile(VImg_Avar,(T-1,1))*100};
 
         SaveMe2Nifti(vimg,NewDir2DSE+"/VarImg",imobj,rmvIdx)
     else:
