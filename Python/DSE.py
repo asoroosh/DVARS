@@ -288,7 +288,7 @@ INPUTS:
                 'Avar_Img4': VImg_Avar_ts,\
                 'Dvar_Img4': VImg_Dvar_ts/np.transpose(np.tile(VImg_Avar,(T-1,1))*100),\
                 'Svar_Img4': VImg_Svar_ts/np.transpose(np.tile(VImg_Avar,(T-1,1))*100),\
-                'Evar_Img4': VImg_Evar_ts/np.transpose(np.tile(VImg_Avar,(T-1,1))*100)};
+                'Evar_Img4': VImg_Evar_ts/np.transpose(np.tile(VImg_Avar,(2,1))*100)};
 
         SaveMe2Nifti(vimg,NewDir2DSE+"/VarImg",imobj,rmvIdx)
     else:
