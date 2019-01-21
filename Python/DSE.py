@@ -186,13 +186,13 @@ def SaveMe2Nifti(Dict2Save,Where2Save,imobj,rmvIdx):
 
 
 def DSE_Calc(Y,\
-        NewDir2DSE='',\
-        scl = 0,\
-        norm = 0,\
-        demean   = True,\
-        DSEImage = False,\
-        imobj = '',\
-        verbose  = False):
+        NewDir2DSE = '',\
+        scl        = 0,\
+        norm       = 0,\
+        demean     = True,\
+        DSEImage   = False,\
+        imobj      = '',\
+        verbose    = False):
     """
     DSE_Calc(Y, NewDir2DSE='', scl = 0, demean = True, \
              DSEImage = False, verbose = False)    
@@ -283,13 +283,13 @@ INPUTS:
     if imobj != '' and DSEImage:
         print('DSE_Calc::: Writing the DSE images...')
         vimg = {'Avar_Img3': VImg_Avar,\
-                'Dvar_Img3': VImg_Dvar,\
-                'Svar_Img3': VImg_Svar,\
-                'Evar_Img3': VImg_Evar,\
+                'Dvar_Img3': VImg_Dvar/VImg_Avar*100,\
+                'Svar_Img3': VImg_Svar/VImg_Avar*100,\
+                'Evar_Img3': VImg_Evar/VImg_Avar*100,\
                 'Avar_Img4': VImg_Avar_ts,\
-                'Dvar_Img4': VImg_Dvar_ts,\
-                'Svar_Img4': VImg_Svar_ts,\
-                'Evar_Img4': VImg_Evar_ts};
+                'Dvar_Img4': VImg_Dvar_ts/VImg_Avar_ts*100,\
+                'Svar_Img4': VImg_Svar_ts/VImg_Avar_ts*100,\
+                'Evar_Img4': VImg_Evar_ts/VImg_Avar_ts*100};
 
         SaveMe2Nifti(vimg,NewDir2DSE+"/VarImg",imobj,rmvIdx)
     else:
