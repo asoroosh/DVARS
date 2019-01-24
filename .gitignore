@@ -2,3 +2,5 @@ Pendings/
 *.m~
 __pycache__
 *.pyc
+*.txt
+
