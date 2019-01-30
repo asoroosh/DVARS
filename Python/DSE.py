@@ -352,9 +352,9 @@ INPUTS:
            'Svar_ts':V_Svar_ts,\
            'Evar_ts':V_Evar_ts};
 
-    normvts = {'Dvar_ts':V_Dvar_ts/np.mean(V_Avar_ts),\
-               'Svar_ts':V_Svar_ts/np.mean(V_Avar_ts),\
-               'Evar_ts':V_Evar_ts/np.mean(V_Avar_ts)};
+    normvts = {'pDvar_ts':V_Dvar_ts/np.mean(V_Avar_ts),\
+               'pSvar_ts':V_Svar_ts/np.mean(V_Avar_ts),\
+               'pEvar_ts':V_Evar_ts/np.mean(V_Avar_ts)};
 
 
     vv = {'Avar'  : V_w_Avar,\
