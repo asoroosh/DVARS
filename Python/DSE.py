@@ -352,15 +352,19 @@ INPUTS:
            'Svar_ts':V_Svar_ts,\
            'Evar_ts':V_Evar_ts};
 
+    normvts = {'Dvar_ts':V_Dvar_ts/np.mean(V_Avar_ts),\
+               'Svar_ts':V_Svar_ts/np.mean(V_Avar_ts),\
+               'Evar_ts':V_Evar_ts/np.mean(V_Avar_ts)};
 
-    vv = {'Avar': V_w_Avar,\
-          'Dvar': V_w_Dvar,\
-          'Svar': V_w_Svar,\
-          'Evar': V_w_Evar,\
-          'gAvar': V_g_Avar ,\
-          'gDvar': V_g_Dvar,\
-          'gSvar': V_g_Svar,\
-          'gEvar': V_g_Evar,\
+
+    vv = {'Avar'  : V_w_Avar,\
+          'Dvar'  : V_w_Dvar,\
+          'Svar'  : V_w_Svar,\
+          'Evar'  : V_w_Evar,\
+          'gAvar' : V_g_Avar ,\
+          'gDvar' : V_g_Dvar,\
+          'gSvar' : V_g_Svar,\
+          'gEvar' : V_g_Evar,\
           'ngAvar': V_ng_Avar,\
           'ngDvar': V_ng_Dvar,\
           'ngSvar': V_ng_Svar,\
@@ -434,6 +438,7 @@ INPUTS:
     ######################################################
     DSEOut = {'VarScalar':vv\
             ,'VarTimeSeries':vts\
+            ,'NormVarTimeSeries':normvts\
             ,'percent':Prntg\
             ,'MeanSquared':MS\
             ,'RMS':RMS\
