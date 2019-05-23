@@ -2,6 +2,12 @@ function [DVARS,Stat]=DVARSCalc_octave(V0,varargin)
 %[DVARS,Stat]=DVARSCalc_octave(V0,varargin)
 % Statistical inference on DVars component to identify corrupted scans. 
 %
+% YOU NEED to install statistics package prior to running this code:
+% Here is where to download it: https://octave.sourceforge.io/statistics/
+%
+% octave:1> pkg install -forge io
+% octave:2> pkg load statistics
+%
 %%%%INPUTS:
 %
 %   V0:             Can be (1) a string indicating the path to the 
@@ -293,10 +299,12 @@ Zp      =   @(x,m,s) 1-normcdf(Zstat(x,m,s));
 %--
 X2stat  =   @(x,m,s) 2*m/s^2*x;
 X2df    =   @(m,s)   2*m^2/s^2;
-%X2p    =   @(x,m,s) 1-chi2cdf(X2stat(x,m,s),X2df(m,s));
-X2p0    =   @(x,m,s) (X2stat(x,m,s)-X2df(m,s))/sqrt(2*X2df(m,s));
-X2p     =   @(x,m,s) chi2cdf(X2stat(x,m,s),X2df(m,s)); %'upper' opetion is not avaible in Octave
 
+% https://github.com/asoroosh/DVARS/issues/7
+% Octave doesn't have a upper tail option for chi2cdf():
+% chi2cdf(..., 'upper') == (1 - chi2cdf(...))
+X2p    =   @(x,m,s) 1-chi2cdf(X2stat(x,m,s),X2df(m,s));
+X2p0   =   @(x,m,s) (X2stat(x,m,s)-X2df(m,s))/sqrt(2*X2df(m,s));
 
 %*************************************************************************
 %Relative DVARS--------------------------------------------------------
