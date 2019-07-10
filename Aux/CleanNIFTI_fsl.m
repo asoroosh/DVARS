@@ -17,6 +17,7 @@ fnnf=mfilename; if ~nargin; help(fnnf); return; end; clear fnnf;
 Steps=[]; verbose=1; DestDir=[]; md=[]; scl=[];
 datatype  = 'f';
 voxelsize = [2 2 2 1];
+SaveFlag     = 0;
 
 if sum(strcmpi(varargin,'verbose'))
    verbose      =   varargin{find(strcmpi(varargin,'verbose'))+1}; 
@@ -24,10 +25,15 @@ end
 %
 if sum(strcmpi(varargin,'destdir'))
    DestDir      =   varargin{find(strcmpi(varargin,'destdir'))+1};
+   SaveFlag     = 1;
 end
 
 if sum(strcmpi(varargin,'voxelsize'))
    voxelsize      =   varargin{find(strcmpi(varargin,'voxelsize'))+1};
+end
+
+if sum(strcmpi(varargin,'ImgDim'))
+   ImgDim      =   varargin{find(strcmpi(varargin,'ImgDim'))+1};
 end
 
 % untested, so I leave it as it is for now
@@ -46,6 +52,11 @@ if sum(strcmpi(varargin,'scale'))
    scl          =   varargin{find(strcmpi(varargin,'scale'))+1};
    md           =   1;
 end
+
+if sum(strcmpi(varargin,'Removables'))
+   img_Removables      =   varargin{find(strcmpi(varargin,'Removables'))+1};
+end
+
 %
 if sum(strcmpi(varargin,'demean'))
     dmflag          =   1;
@@ -91,48 +102,63 @@ if ischar(V0)
     end
     
     if verbose; disp('-Image loaded.'); end;
-elseif isnumeric(V0) && size(V0,1)>size(V0,2)
-    if verbose; disp('-Input is a Matrix.'); end;
-    Y = double(V0);  
-    I0= size(Y,1); T0 = size(Y,2);
-elseif isnumeric(V0) && size(V0,1)<=size(V0,2) && size(V0,3)==1
-    if verbose; disp('-Input is a Matrix.'); end;
-    error('Check the input, matrix should be in form of IxT, where I=XxYxZ!');    
-elseif isnumeric(V0) && size(V0,3)>1 && size(V0,4)>1
-    disp(['-Input is a 4D matrix.'])
-    X0 = size(V0,1); Y0 = size(V0,2); Z0 = size(V0,3); T0 = size(V0,4);
-    I0 = prod([X0,Y0,Z0]);
-    Y  = reshape(V0,[I0,T0]); clear V2;
-    V1 = [];
+    
+elseif isnumeric(V0)
+    if numel(size(V0))==2 && ismember(1,size(V0))
+        if verbose; disp('-Input is a 1D Matrix.'); end;
+        Y = double(V0);  
+        I0= numel(Y);
+        T0=1;
+        ImageType = 1; 
+    elseif numel(size(V0))==2 && ~ismember(1,size(V0))
+        if verbose; disp('-Input is a 2D Matrix.'); end;
+        if  size(V0,1)<size(V0,2); error('Matrix should be voxels X time: Transpose the input'); end;
+        Y = double(V0);  
+        I0= size(Y,1); T0 = size(Y,2);
+        ImageType = 2;
+    elseif numel(size(V0))==3
+         if verbose; disp('-Input is a 2D Matrix.'); end;
+         error('Has not developed anything for this yet!')
+         ImageType = 3;
+    elseif numel(size(V0))==4
+        disp(['-Input is a 4D matrix.'])
+        X0 = size(V0,1); Y0 = size(V0,2); Z0 = size(V0,3); T0 = size(V0,4);
+        I0 = prod([X0,Y0,Z0]);
+        Y  = reshape(V0,[I0,T0]);
+        ImageType = 4;
+    else
+        error('Something does not match with input dimensions.')
+    end
 end
 
 %Y = double(Y);%to work with int 16bit as well.
+if ~SaveFlag
+    %------------------------------------------------------------------------
+    %Remove voxels of zeros/NaNs---------------------------------------------------
+    nan_idx    = find(isnan(sum(Y,2)));
+    zeros_idx  = find(sum(Y,2)==0);
+    idx        = 1:I0;
+    idx([nan_idx;zeros_idx]) = [];
+    Y([nan_idx;zeros_idx],:) = [];
+    I1 = size(Y,1); %update number of voxels
 
-%------------------------------------------------------------------------
-%Remove voxels of zeros/NaNs---------------------------------------------------
-nan_idx    = find(isnan(sum(Y,2)));
-zeros_idx  = find(sum(Y,2)==0);
-idx        = 1:I0;
-idx([nan_idx;zeros_idx]) = [];
-Y([nan_idx;zeros_idx],:) = [];
-I1 = size(Y,1); %update number of voxels
+    if verbose; disp(['-Extra-cranial areas removed: ' num2str(size(Y,1)) 'x' num2str(size(Y,2))]); end;
+    Steps=[Steps 'CLEANED_'];
 
-if verbose; disp(['-Extra-cranial areas removed: ' num2str(size(Y,1)) 'x' num2str(size(Y,2))]); end;
-Steps=[Steps 'CLEANED_'];
-
-Stat.GlobalMeanSignal = mean(Y);
-Stat.OrigDim     = [I0 T0];
-Stat.CleanedDim  = [I1 T0];
-Stat.Removables  = [nan_idx;zeros_idx];
-OrigMean = mean(Y,2);
-Stat.OrigMean    = OrigMean;
-Stat.ImgDim = [X0 Y0 Z0 T0];
-Stat.voxelsize = voxelsize;
-Stat.datatype  = datatype;
+    Stat.GlobalMeanSignal = mean(Y);
+    Stat.OrigDim     = [I0 T0];
+    Stat.CleanedDim  = [I1 T0];
+    Stat.Removables  = [nan_idx;zeros_idx];
+    OrigMean = mean(Y,2);
+    Stat.OrigMean    = OrigMean;
+    Stat.ImgDim = [X0 Y0 Z0 T0];
+    Stat.voxelsize = voxelsize;
+    Stat.datatype  = datatype;
+end
 %------------------------------------------------------------------------
 % Intensity Normalisation------------------------------------------------------
 IntnstyScl = @(Y,md,scl) (Y./md).*scl; 
-if ~isempty(scl) && isempty(md)
+if ~isempty(scl) && isempty(md) && ~SaveFlag
     md  = median(mean(Y,2)); %NB median of the mean image.
     %md  = mean(mean(Y,2)); %NB *mean* of the mean image.
     Y   = IntnstyScl(Y,md,scl);
@@ -150,7 +176,7 @@ else
 end
 %------------------------------------------------------------------------
 %Centre the data-----------------------------
-if dmflag
+if dmflag && ~SaveFlag
     mvY_NormInt      =    mean(Y,2); %later will be used as grand mean! don't touch it!
     dmeaner          =    repmat(mvY_NormInt,[1,T0]);
     Y                =    Y-dmeaner; clear dmeaner
@@ -160,21 +186,38 @@ if dmflag
 end
 %------------------------------------------------------------------------
 %Save the image-----------------------------
-if ~isempty(DestDir) && ischar(V0)
+if ~isempty(DestDir) && isnumeric(V0) && SaveFlag
     %if ~any(strfind(path,'spm')); warning('**SPM has not been added to the path!**'); end;
     [spathstr,sname,stext]=fileparts(DestDir);
-    if exist(spathstr,'dir')~=7; mkdir(spathstr); end;
-                    
-        Y_tmp        = zeros(I0,T0);
-        Y_tmp(idx,:) = Y;
-        Y_tmp        = reshape(Y_tmp,[X0 Y0 Z0 T0]);
-        
-        V_tmp                   = V1;
-        V_tmp.hdr.dime.dim(2:5) = [X0 Y0 Z0 T0];
-        save_untouch_nii(Y_tmp,[spathstr '/' sname stext],datatype,voxelsize);
-        if verbose; disp(['image saved: ' spathstr '/' sname stext]); end; 
-        clear *_tmp        
-    clear V_Img;
+    
+    if isempty(spathstr)
+        Dir2Save = sname;
+    else
+        if exist(spathstr,'dir')~=7; mkdir(spathstr); end;
+        Dir2Save = [spathstr '/' sname];
+    end
+    
+    if verbose; disp(['Image saved: ' Dir2Save]); end; 
+    
+    X0= ImgDim(1); 
+    Y0= ImgDim(2); 
+    Z0= ImgDim(3);
+    I00 = prod([X0,Y0,Z0]);
+    
+    if T0~=1 %if image was 4D
+        T00= ImgDim(4);
+        if T00~=T0; error('There is something wrong the volumes.'); end; 
+    end
+    
+    img_idx = 1:I00;
+    img_idx(img_Removables) = []; % this is index of signal
+    
+    Y_tmp = zeros(I00,T0); %leave the T0 here, if it is one it is fine in case of 3D images
+    Y_tmp(img_idx,:) = Y;
+    Y_tmp        = reshape(Y_tmp,[X0 Y0 Z0 T0]); %leave the T0 here, if it is one it is fine in case of 3D images
+
+    save_avw(Y_tmp,Dir2Save,datatype,voxelsize);
+    clear *_tmp clear V_Img;
 else
     if verbose
         disp('-the images will NOT be saved:')
