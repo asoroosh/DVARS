@@ -59,7 +59,7 @@ def CleanNIFTI(V,\
 
         filename =  os.path.expandvars(V)
         imobj = nib.load(filename, mmap=False)
-        imdat = imobj.get_data().astype(float)
+        imdat = imobj.get_fdata()
 
         T = imdat.shape[3]
         I = np.prod(imdat.shape[0:3])
@@ -156,7 +156,7 @@ def SaveMe2Nifti(Dict2Save,Where2Save,imobj,rmvIdx):
     imghdr = imobj.header.copy()
     [X,Y,Z,T] = imobj.shape[0:4]
     I = np.prod((X,Y,Z))
-    idx_tmp  = range(I+1)[1:I+1]
+    idx_tmp = np.arange(I)
     idx_tmp0 = np.delete(idx_tmp,rmvIdx,axis=0)
 
     for varname in Dict2Save.keys():

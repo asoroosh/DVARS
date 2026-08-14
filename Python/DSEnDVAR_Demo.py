@@ -9,18 +9,12 @@ University of Oxford, 2019
 
 from DSE import DSE_Calc, DVARS_Calc, CleanNIFTI
 import pickle
-
+import numpy as np
 
 RS_fMRI_Dir    = '/Users/sorooshafyouni/Desktop/HCP/135932/135932_RS/MNINonLinear/Results/rfMRI_REST1_LR/rfMRI_REST1_LR_hp2000_clean.nii.gz'
-DSEResults_Dir = '/Users/sorooshafyouni/Home/GitClone/DVARS/Python/'
+DSEResults_Dir = '/Users/sorooshafyouni/Home/GitClone/DVARS/Python/'	
 
-
-#Write me to a pickle, quickly!
-def Save2Pickle(Path2File,Vars):
-    with open(Path2File,"wb") as f:
-        pickle.dump(Vars, f)		
-
-##++++++++++++++++++++++++++++++++++++
+##+++++++++++++++++++++++++++++++++++++
 ##+++++++++++++++++++CLEAN THE NIFTI+++
 #
 print('========Read and clean...')
@@ -33,41 +27,38 @@ DSEOut  = DSE_Calc( RS_fMRI_Dir,\
         DSEImage    = False,\
         verbose     = False)
 
-#Vout = CleanNIFTI(RS_fMRI_Dir,scl = 1/100)
-##
-#GS = Vout[6] # this is the global signal 
-#YY = Vout[0] # This is the cleaned version of the image. 
-#
-#del Vout
-#
 ## Just to test everything is sound with the DSE and DAVRS code. 
-##YY = np.random.randn(1500,500)
-#
-#
-#
-#print('========Running DSE...')
+YY = np.random.randn(1500,500)
+
+print('========Running DSE...')
 ###+++++++++++++++++++DSE+++++
-#DSEOut  = DSE_Calc( YY,\
-#        scl         = 0,\
-#        norm        = 0,\
-#        DSEImage    = False,\
-#        verbose     = False)
+DSEOut  = DSE_Calc( YY,\
+        scl         = 0,\
+        norm        = 0,\
+        DSEImage    = False,\
+        verbose     = False)
 #
 #
 #
 #
-#print('========Running DVARS...')
+print('========Running DVARS...')
 ##+++++++++++++++++++DVARS++++
-#DVARSOut = DVARS_Calc(YY,\
-#               dd            = 1, \
-#               WhichExpVal   = 'median',\
-#               WhichVar      = 'hIQRd',\
-#               norm          = 0,\
-#               scl           = 0,\
-#               DeltapDvarThr = 5)
-#
+DVARSOut = DVARS_Calc(YY,\
+               dd            = 1, \
+               WhichExpVal   = 'median',\
+               WhichVar      = 'hIQRd',\
+               norm          = 0,\
+               scl           = 0,\
+               DeltapDvarThr = 5)
+
 #
 ##++++Write me on a pickle!++++++++++
+
+#Write me to a pickle, quickly!
+#def Save2Pickle(Path2File,Vars):
+#    with open(Path2File,"wb") as f:
+#        pickle.dump(Vars, f)	
+
 #Save2Pickle(DSEResults_Dir + 'GS_Demo.pkl',GS)
 #Save2Pickle(DSEResults_Dir + 'DSE_Demo.pkl',DSEOut)
 #Save2Pickle(DSEResults_Dir + 'DVARS_Demo.pkl',DVARSOut)

@@ -3,4 +3,6 @@ Pendings/
 __pycache__
 *.pyc
 *.txt
+!requirements.txt
+.venv/
 
